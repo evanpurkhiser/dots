@@ -18,7 +18,7 @@ config_root="$(dirname "$config_root")"
 config_root="$(cd "$config_root" && pwd)"
 
 # This is the file that the current groups configuration is stored in
-groups_file="$config_root/.groups"
+groups_file="${XDG_CACHE_HOME:-$HOME/.cache}/.config-groups"
 
 # error [message]
 #
@@ -57,7 +57,7 @@ function list-groups()
 function set-groups()
 {
 	# Only set the groups if they aren't already set
-	[[ -e "$groups_file" ]] && error "Groups already set, use clear-groups first"
+	[[ -f "$groups_file" ]] && error "Groups already set, use clear-groups first"
 	[[ $# == 0 ]] && error "No groups specified"
 
 	local groups="$(IFS=$'\n'; echo "$*")"
@@ -72,6 +72,7 @@ function set-groups()
 	[[ -n "$invalid_groups" ]] && error "Invalid groups: ${invalid_groups}"
 
 	# Save the groups configuration
+	mkdir -p "{$groups_file%/*}"
 	echo "$groups" > "$groups_file"
 }
 
@@ -80,7 +81,7 @@ function set-groups()
 # Removes the $groups_file
 function clear-groups()
 {
-	rm "$groups_file"
+	rm -f "$groups_file"
 }
 
 # build-tree [build-path] [groups]
