@@ -27,3 +27,19 @@ function error()
 	echo "$1" 1>&2
 	exit 1
 }
+
+# list-groups
+#
+# Echos a list of all available configuration groups that can be enabled. All
+# directories aside from the base directory are expected to contain groups.
+function list-groups()
+{
+	# The base group is an implicit group
+	echo "base"
+
+	# All other groups are nested under directories
+	find "$config_root" -maxdepth 2 -mindepth 2 \
+		-not -path "$config_root/.git/*" \
+		-not -path "$config_root/base/*" \
+		-type d -printf '%P\n'
+}
