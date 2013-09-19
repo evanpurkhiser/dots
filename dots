@@ -82,3 +82,52 @@ function clear-groups()
 {
 	rm "$groups_file"
 }
+
+# build-tree [build-path] [groups]
+#
+# This function will create the entirely pre-processed file tree containing all
+# configuration files required for the specified configuration groups.
+#
+# groups:     A list of configuration groups that should be used to
+# build_path: This should be a directory path where the configuration files
+#             should be compiled into. If the directory doesn't exit it will
+#             be created. If the string is null a temp directory will be created
+function build-tree()
+{
+	[[ $# < 1 ]] && error "Invalid ammount of agruments"
+
+	local groups=($1)
+	local build_path="$2"
+
+	# Create a temporary directory if the build_path is null
+	if [ -z "$build_path" ]
+	then
+		build_path="$(mktemp -d)"
+	fi
+
+	# Handle each configuration groups tree
+	for group in "${groups[@]}"
+	do
+		# Pass each file to be installed to compile-tree
+		find "$config_root/$group" -type f -printf "%P\0" \
+			| while read -d $'\0' file
+		do
+			compile-tree "${group%/}" "$file" "$build_path"
+		done
+	done
+	exit 1
+}
+
+
+function compile-tree()
+{
+	[[ $# != 3 ]] && error "Invalid ammount of arguments"
+
+	local config_group="$1"
+	local source_file="$2"
+	local build_path="$3"
+
+	echo "Installing $source_file from group \"$config_group\" into $build_path"
+}
+
+build-tree "$(cat "$groups_file")"
