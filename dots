@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+# Use default Free desktop specification if this isn't defined
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+# Get the path to the dot-configuration repository. The root is the location of
+# this bash script. Must resolve the symlink
+config_root="${BASH_SOURCE[0]}"
+
+while [ -h "$config_root" ]
+do
+	config_root="$(readlink "$config_root")"
+done;
+
+config_root="$(dirname "$config_root")"
+config_root="$(cd "$config_root" && pwd)"
