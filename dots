@@ -142,15 +142,20 @@ function compile-file()
 	# Create the install directory if it doesn't exist
 	mkdir -p ${install_path%/*}
 
-	# If the file doesn't exist in the build directory install it
-	# If the file is a 'override' (.ovrd) file then install it
-	if [[ ! -f "$install_path"  ]]
+	# If the file is a 'override' (.override) file then copy it, replacing what
+	# ever file may have been already
+	if [[ ${source_file##*.} == "override" ]]
 	then
-		cp --preserve=all "$source_path" "$install_path"
+		cp --preserve=all "${source_path}" "${install_path%.*}"
+		return
 	fi
 
-
-
+	# If the file doesn't exist in the build directory copy it
+	if [[ ! -f "$install_path" ]]
+	then
+		cp --preserve=all "$source_path" "$install_path"
+		return
+	fi
 }
 
 
