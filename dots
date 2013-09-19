@@ -16,3 +16,14 @@ done;
 
 config_root="$(dirname "$config_root")"
 config_root="$(cd "$config_root" && pwd)"
+
+# error [message]
+#
+# Exit the script and print a error
+#
+# message: The message to print to stderr just before exiting
+function error()
+{
+	echo "$1" 1>&2
+	exit 1
+}
