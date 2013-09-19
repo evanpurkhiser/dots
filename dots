@@ -17,6 +17,9 @@ done;
 config_root="$(dirname "$config_root")"
 config_root="$(cd "$config_root" && pwd)"
 
+# This is the file that the current groups configuration is stored in
+groups_file="$config_root/.groups"
+
 # error [message]
 #
 # Exit the script and print a error
@@ -42,4 +45,40 @@ function list-groups()
 		-not -path "$config_root/.git/*" \
 		-not -path "$config_root/base/*" \
 		-type d -printf '%P\n'
+}
+
+# set-groups
+#
+# Set the list of configuration groups that should be used to compile the
+# configuration tree upon calling `install`. These valeus are stored in the
+# $groups_file
+#
+# args: Each argument represents a group to be stored in the groups_file
+function set-groups()
+{
+	# Only set the groups if they aren't already set
+	[[ -e "$groups_file" ]] && error "Groups already set, use clear-groups first"
+	[[ $# == 0 ]] && error "No groups specified"
+
+	local groups="$(IFS=$'\n'; echo "$*")"
+
+	# Find any config groups that aren't available
+	local invalid_groups="$(echo "$groups" | grep \
+		--invert-match  \
+		--fixed-strings \
+		--line-regexp "$(list-groups)" | tr "\n" " ")"
+
+	# Error out if any groups aren't valid
+	[[ -n "$invalid_groups" ]] && error "Invalid groups: ${invalid_groups}"
+
+	# Save the groups configuration
+	echo "$groups" > "$groups_file"
+}
+
+# clear-groups
+#
+# Removes the $groups_file
+function clear-groups()
+{
+	rm "$groups_file"
 }
