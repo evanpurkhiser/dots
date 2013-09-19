@@ -24,7 +24,7 @@ config_root="$(cd "$config_root" && pwd)"
 # message: The message to print to stderr just before exiting
 function error()
 {
-	echo "$1" 1>&2
+	echo -e "Error: $1" 1>&2
 	exit 1
 }
 
