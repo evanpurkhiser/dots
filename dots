@@ -112,14 +112,22 @@ function build-tree()
 		find "$config_root/$group" -type f -printf "%P\0" \
 			| while read -d $'\0' file
 		do
-			compile-tree "${group%/}" "$file" "$build_path"
+			compile-file "${group%/}" "$file" "$build_path"
 		done
 	done
-	exit 1
+
+	echo "$build_path"
 }
 
-
-function compile-tree()
+# compile-tree
+#
+# Installs a file into the build directory. If the file already exists then the
+# file will either be overriden, appended, or appended at a explicit point.
+#
+# config_group: The named configuration group we are currently installing for
+# source_file:  The name of the file being insatlled for this group
+# build_path:   The location of the build directory to install the file into
+function compile-file()
 {
 	[[ $# != 3 ]] && error "Invalid ammount of arguments"
 
@@ -127,7 +135,22 @@ function compile-tree()
 	local source_file="$2"
 	local build_path="$3"
 
-	echo "Installing $source_file from group \"$config_group\" into $build_path"
+	local install_path="$build_path/$source_file"
+	local source_path="$config_root/$config_group/$source_file"
+
+	# Create the install directory if it doesn't exist
+	mkdir -p ${install_path%/*}
+
+	# If the file doesn't exist in the build directory install it
+	# If the file is a 'override' (.ovrd) file then install it
+	if [[ ! -f "$install_path"  ]]
+	then
+		cp --preserve=all "$source_path" "$install_path"
+	fi
+
+
+
 }
+
 
 build-tree "$(cat "$groups_file")"
