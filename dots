@@ -20,6 +20,9 @@ config_root="$(cd "$config_root" && pwd)"
 # This is the file that the current groups configuration is stored in
 groups_file="${XDG_CACHE_HOME:-$HOME/.cache}/.config-groups"
 
+# This is the magic string for explicit append points
+append_point="!!@@"
+
 # error [message]
 #
 # Exit the script and print a error
@@ -146,7 +149,7 @@ function compile-file()
 	# ever file may have been already
 	if [[ ${source_file##*.} == "override" ]]
 	then
-		cp --preserve=all "${source_path}" "${install_path%.*}"
+		cp --preserve=all "$source_path" "${install_path%.*}"
 		return
 	fi
 
@@ -158,5 +161,27 @@ function compile-file()
 	fi
 }
 
+# test-for-extension
+#
+# Test a file to see if it contains a explicit append point identifier. The
+# identifier used is a `!!@@`. To check for a specific (named) identifier that
+# has a name after the identifier, pass the name as well. If no name is passed,
+# we look for the default indicator.
+#
+# file_pah:       The file to test for an extension
+# extension_name: The name of the extension to look foor
+#
+# echos:          The line(s) that the identifier is on
+function test-for-extension()
+{
+	[[ $# != 1 && $# != 2 ]] && error "Invalid ammount of arguments"
+
+	local file_path="$1"
+	local extension_name="$2"
+
+	grep -n "^[ \t]*${append_point}${extension_name}$" "$file_path" | cut -f 1 -d :
+
+	return ${PIPESTATUS[0]}
+}
 
 build-tree "$(cat "$groups_file")"
