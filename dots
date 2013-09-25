@@ -153,9 +153,14 @@ function compile-file()
 		return
 	fi
 
-	# If the file doesn't exist in the build directory copy it
-	if [[ ! -f "$install_path" ]]
+	# If the file already exists then append to the end of it to 'extend' it
+	if [[ -f "$install_path" ]]
 	then
+		file-cat-appendable "$source_path" >> "$install_path"
+		return
+
+	# If the file doesn't exist in the build directory copy it
+	else
 		cp --preserve=all "$source_path" "$install_path"
 		return
 	fi
@@ -182,6 +187,26 @@ function test-for-extension()
 	grep -n "^[ \t]*${append_point}${extension_name}$" "$file_path" | cut -f 1 -d :
 
 	return ${PIPESTATUS[0]}
+}
+
+# file-cat-appendable
+#
+# Get the contents of a file to be appended (extended). This will remove the
+# shebang from the first line of the file
+#
+# source_file: The file to prepare to be appended
+function file-cat-appendable()
+{
+	[[ $# != 1 ]] && error "Invalid ammount of arguments"
+
+	local source_file="$1"
+
+	if head "$source_file" -n1 | grep -q "^#!.*$"
+	then
+		tail "$source_file" -n +2
+	else
+		cat "$source_file"
+	fi
 }
 
 build-tree "$(cat "$groups_file")"
