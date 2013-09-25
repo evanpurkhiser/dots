@@ -153,16 +153,22 @@ function compile-file()
 		return
 	fi
 
-	# If the file already exists then append to the end of it to 'extend' it
+	# If the file already exists then 'extend' the file
 	if [[ -f "$install_path" ]]
 	then
-		file-cat-appendable "$source_path" >> "$install_path"
-		return
+		local insert_line;
+
+		# Test if the file has a default endpoint
+		if insert_line="$(test-for-extension "$install_path" "")"
+		then
+			replace-line-with "$source_path" "$install_path" "$insert_line"
+		else
+			file-cat-appendable "$source_path" >> "$install_path"
+		fi
 
 	# If the file doesn't exist in the build directory copy it
 	else
 		cp --preserve=all "$source_path" "$install_path"
-		return
 	fi
 }
 
@@ -187,6 +193,34 @@ function test-for-extension()
 	grep -n "^[ \t]*${append_point}${extension_name}$" "$file_path" | cut -f 1 -d :
 
 	return ${PIPESTATUS[0]}
+}
+
+# replace-line-with
+#
+# Replace a line in a file with the contents of another file. This is primarly
+# used to create the 'extended' files where the $append_point is used.
+#
+# file_to_insert: The file that will be inserted into the other file
+# target_file:    The file that will have a specific line replaced with a new
+#                 files contents
+# target_line:    The line to replace with new contents
+function replace-line-with()
+{
+	[[ $# != 3 ]] && error "Invalid ammount of arguments"
+
+	local file_to_insert="$1"
+	local target_file="$2"
+	local target_line="$3"
+
+	local temp_file="$(mktemp)"
+
+	(
+		head -$(expr $target_line - 1) "$target_file"
+		file-cat-appendable "$file_to_insert"
+		tail -n +$(expr $target_line + 1) "$target_file"
+	) > "$temp_file"
+
+	mv "$temp_file" "$target_file"
 }
 
 # file-cat-appendable
