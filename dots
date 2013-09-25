@@ -143,11 +143,11 @@ function compile-file()
 	local source_path="$config_root/$config_group/$source_file"
 
 	# Create the install directory if it doesn't exist
-	mkdir -p ${install_path%/*}
+	mkdir -p "${install_path%/*}"
 
 	# If the file is a 'override' (.override) file then copy it, replacing what
 	# ever file may have been already
-	if [[ ${source_file##*.} == "override" ]]
+	if [[ "${source_file##*.}" == "override" ]]
 	then
 		cp --preserve=all "$source_path" "${install_path%.*}"
 		return
