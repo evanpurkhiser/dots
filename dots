@@ -1,2 +1,79 @@
 #!/bin/env python2.7
 
+import sys, os
+import glob
+
+# Locate the configuration directory that all source configuration files are
+# stored in. This _should_ be the same directory that this script is located in
+SOURCE_DIR = os.path.dirname(os.path.realpath(__file__))
+
+# Put us in the source directory for convinience
+os.chdir(SOURCE_DIR)
+
+# Get the location that we will be installing all of the files into
+INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.environ['HOME'] + '/.config')
+
+
+class Configuration(object):
+
+	# This is a list of groups that are only a single directory deep and do not
+	# contain any groups in sub-directories. The directories in these folders
+	# will be the directories that are insatlled as configuration files
+	single_directory_groups = ['base'];
+
+	# Determine which groups are valid by looking at the directory structure of
+	# that the script is installed in. Groups not defined in the
+	# single_directory_groups array will be considered nested groups
+	valid_groups = [g for g in glob.glob("*/*") if not
+			g.startswith(tuple(single_directory_groups))] + \
+			single_directory_groups
+
+	# This is the default groups file that the configuration group listing for
+	# the machine should be stored in
+	default_group_file = os.getenv('XDG_CACHE_HOME', os.environ['HOME'] +
+			'/.cache') + '/config-group'
+
+	def __init__(self, group_file=default_group_file, groups=[]):
+		self.group_file = group_file
+		self.groups = groups
+
+	# Return the list of groups configured for this system
+	@property
+	def groups(self):
+		return self._groups
+
+	# Set the list of groups for this configuration
+	@groups.setter
+	def groups(self, groups):
+		# Trim trailing and leading slashes
+		groups = [ x.strip('/') for x in groups]
+		
+		if set(groups).difference(self.valid_groups):
+			raise "One of the passed groups does not exist in the source tree"
+		
+		self._groups = groups
+		return groups
+
+	# Load groups from the configuration groups file
+	# This will complain if one of the groups specified in the file doesn't
+	# exist in the source tree (meaning it's considered an 'invalid group'
+	def load_from_file(self):
+		with open(self.group_file, 'a') as f:
+			try:
+				self.groups = f.readlines()
+			except:
+				print "The loaded config group file contains invalid groups"
+				print "Use dots set-groups [group1,group2,...] to reset it"
+
+	# This will save the currently defined list of groups for this configuration
+	# into the groups file
+	def save_to_file(self):
+		with open(self.group_file, 'w+') as f:
+			f.write("\n".join(self.groups))
+
+
+config = Configuration()
+
+config.groups = ['base', 'common/workstation', 'common/graphical', 'machines/desktop']
+
+config.save_to_file()
