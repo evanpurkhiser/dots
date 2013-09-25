@@ -123,7 +123,7 @@ function build-tree()
 	echo "$build_path"
 }
 
-# compile-tree
+# compile-file
 #
 # Installs a file into the build directory. If the file already exists then the
 # file will either be overriden, appended, or appended at a explicit point.
@@ -156,14 +156,16 @@ function compile-file()
 	# If the file already exists then 'extend' the file
 	if [[ -f "$install_path" ]]
 	then
-		local insert_line;
-
 		# Test if the file has a default endpoint
-		if insert_line="$(test-for-extension "$install_path" "")"
+		local insert_lines="$(test-for-extension "$install_path" "")"
+
+		# Append to the end (default 'extend' mode) if no insert line(s)
+		# are identified
+		if [[ -z "$insert_lines" ]]
 		then
-			replace-line-with "$source_path" "$install_path" "$insert_line"
-		else
 			file-cat-appendable "$source_path" >> "$install_path"
+		else
+			replace-lines-with "$source_path" "$install_path" "$insert_lines"
 		fi
 
 	# If the file doesn't exist in the build directory copy it
@@ -195,30 +197,52 @@ function test-for-extension()
 	return ${PIPESTATUS[0]}
 }
 
-# replace-line-with
+# replace-lines-with
 #
-# Replace a line in a file with the contents of another file. This is primarly
-# used to create the 'extended' files where the $append_point is used.
+# Replace one or more lines line in a file with the contents of another file.
+# This is primarly used to create the 'extended' files where the $append_point
+# is used.
 #
 # file_to_insert: The file that will be inserted into the other file
 # target_file:    The file that will have a specific line replaced with a new
 #                 files contents
-# target_line:    The line to replace with new contents
-function replace-line-with()
+# target_lines:   The line(s) to replace with new contents
+function replace-lines-with()
 {
 	[[ $# != 3 ]] && error "Invalid ammount of arguments"
 
 	local file_to_insert="$1"
 	local target_file="$2"
-	local target_line="$3"
+	local target_lines=($3)
 
+	# Don't do anything if no lines were passed
+	[[ ${#target_lines[@]} == 0 ]] && return
+
+	local start_line=1
 	local temp_file="$(mktemp)"
 
-	(
-		head -$(expr $target_line - 1) "$target_file"
-		file-cat-appendable "$file_to_insert"
-		tail -n +$(expr $target_line + 1) "$target_file"
-	) > "$temp_file"
+	for (( i=0; i < ${#target_lines[@]}; ++i ))
+	do
+		local line_prev=$((${target_lines[i]} - 1))
+		local line_next=$((${target_lines[i]} + 1))
+		local next_line=$((${target_lines[i+1]} - 1))
+
+		# If there is no next line then go to the end of the file
+		[[ $next_line == -1 ]] && next_line=$(cat "$target_file" | wc -l)
+
+		# Slice up the contents, combining it in the temp file
+		(
+			(( $start_line > $line_prev )) ||\
+				sed -n "$start_line,${line_prev}p" "$target_file"
+
+			file-cat-appendable "$file_to_insert"
+
+			(( $line_next > $next_line ))  ||\
+				sed -n "$line_next,${next_line}p"  "$target_file"
+		) >> "$temp_file"
+
+		start_line=$next_line
+	done
 
 	mv "$temp_file" "$target_file"
 }
