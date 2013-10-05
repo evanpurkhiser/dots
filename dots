@@ -143,8 +143,8 @@ class ConfigFile(object):
 		return match.group(2) in target_file.named_append_points()
 
 	def compile(self):
-		self.compiled_file = None
-		file_data = []
+		self.compiled = None
+		compiling_files = []
 
 		# Read all file paths into arrays
 		# This may be memory inefficient and may have to be changed later
@@ -165,5 +165,11 @@ class ConfigFile(object):
 				# Ensure a trailing newline
 				if not contents[-1].endswith('\n'):
 					contents[-1] += '\n'
+
+				# Ensure the file only has one explicit default append point
+				if contents.count(AP_IDENTIFIER + '\n') > 1:
+					raise Exception("More than one explicit append point in {0}".format(path))
+
+				compiling_files.append(contents)
 
 				file_data.append(contents)
