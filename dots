@@ -140,7 +140,7 @@ class ConfigFile(object):
 		"""Determine the mode of this file. If the file has multiple overriding
 		files that don't have matching permissions, then the highest mode will
 		be used"""
-		return max([os.lstat(p).st_mode for p in self.real_paths()])
+		return max([os.stat(p).st_mode for p in self.real_paths()])
 
 	def named_append_points(self):
 		""" Get a list of named append points in this file that will
