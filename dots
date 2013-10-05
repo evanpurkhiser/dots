@@ -105,6 +105,15 @@ class ConfigFile(object):
 		# Trim front and back empty lines
 		return filter(None, file_lines)
 
+	@staticmethod
+	def strip_shebang(file_lines):
+		"""Removes the shebang from the first line of a list"""
+		if file_lines[0].startswith("#!/"):
+			del file_lines[0]
+			file_lines = ConfigFile.trim_file_whitespace(file_lines)
+
+		return file_lines
+
 	def __init__(self, relative_path, config):
 		self.path = relative_path
 		self.config = config
@@ -205,9 +214,7 @@ class ConfigFile(object):
 		# Append points, but if it can't find any will default to appending the file
 		for single_file in compiling_files[1:]:
 			# Remove shebang from first line
-			if single_file[0].startswith("#!/"):
-				del single_file[0]
-				single_file = self.trim_file_whitespace(single_file)
+			single_file = self.strip_shebang(single_file)
 
 			# Check if we need to slice into the array to insert
 			try:
