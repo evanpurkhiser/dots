@@ -239,5 +239,11 @@ class ConfigFile(object):
 				del compiled[slice_at]
 				compiled[slice_at:1] = appending_data
 
+		# Remove unused append point identifiers
+		compiled = [l for l in compiled if not l.startswith(AP_IDENTIFIER)]
 
-				file_data.append(contents)
+		# Keep the compiled lines for saving to a file later
+		self.compiled = compiled
+
+		return self
+
