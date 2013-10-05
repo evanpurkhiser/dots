@@ -7,18 +7,18 @@ import glob
 # stored in. This _should_ be the same directory that this script is located in
 SOURCE_DIR = os.path.dirname(os.path.realpath(__file__))
 
-# Put us in the source directory for convinience
+# Put us in the source directory for convenience
 os.chdir(SOURCE_DIR)
 
 # Get the location that we will be installing all of the files into
-INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.environ['HOME'] + '/.config')
+INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '/.config'))
 
 
 class Configuration(object):
 
 	# This is a list of groups that are only a single directory deep and do not
 	# contain any groups in sub-directories. The directories in these folders
-	# will be the directories that are insatlled as configuration files
+	# will be the directories that are installed as configuration files
 	single_directory_groups = ['base'];
 
 	# Determine which groups are valid by looking at the directory structure of
@@ -30,8 +30,8 @@ class Configuration(object):
 
 	# This is the default groups file that the configuration group listing for
 	# the machine should be stored in
-	default_group_file = os.getenv('XDG_CACHE_HOME', os.environ['HOME'] +
-			'/.cache') + '/config-group'
+	default_group_file = os.path.join(os.getenv('XDG_CACHE_HOME',
+		os.path.join(os.environ['HOME'], '.cache')), 'config-group')
 
 	def __init__(self, group_file=default_group_file, groups=[]):
 		self.group_file = group_file
