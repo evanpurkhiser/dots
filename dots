@@ -253,7 +253,7 @@ class ConfigFile(object):
 
 		return self
 
-	def diff(self, against=INSTALL_PATH):
+	def diff(self, against=INSTALL_DIR):
 		"""Display a diff of the compiled file contest against the currently
 		installed version of this file. This uses git as an external command to
 		do the diffing"""
