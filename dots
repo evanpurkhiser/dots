@@ -1,6 +1,6 @@
 #!/bin/env python2.7
 
-import sys, os
+import sys, os, shutil
 import glob
 import re
 import tempfile
@@ -94,6 +94,24 @@ class Configuration(object):
 
 		# Don't include named_fragment files
 		return [f for f in files if not f.is_named_fragment()]
+
+	def install_tree(self, to=None):
+		"""Install the configuration tree into a specific directory"""
+		if not to: to = INSTALL_DIR
+
+		# Install all files to the location
+		[f.install(to) for f in self.files()]
+
+	def diff_installed(self):
+		"""Run a diff against the currently installed tree. This uses git as an
+		external command to do the diffing"""
+		temp_dir = tempfile.mkdtemp()
+		self.install_tree(temp_dir)
+
+		os.system(GIT_DIFF.format(path1=INSTALL_DIR, path2=temp_dir))
+
+		shutil.rmtree(temp_dir)
+
 
 class ConfigFile(object):
 
