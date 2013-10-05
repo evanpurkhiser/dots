@@ -194,4 +194,28 @@ class ConfigFile(object):
 
 				compiling_files.append(contents)
 
+		# Nothing left to do if there were no files
+		if not compiling_files:
+			self.compiled_file = ""
+			return self
+
+		compiled = compiling_files[0];
+
+		# Handle merging the file_data into one file. This will look for default
+		# Append points, but if it can't find any will default to appending the file
+		for single_file in compiling_files[1:]:
+			# Remove shebang from first line
+			if single_file[0].startswith("#!/"):
+				del single_file[0]
+				single_file = self.trim_file_whitespace(single_file)
+
+			# Check if we need to slice into the array to insert
+			try:
+				slice_at = compiled.index(AP_IDENTIFIER + '\n')
+				del compiled[slice_at]
+				compiled[slice_at:1] = single_file
+			except:
+				compiled += ['\n'] + single_file
+
+
 				file_data.append(contents)
