@@ -116,7 +116,7 @@ class ConfigFile(object):
 	def install_path(self):
 		return os.path.join(INSTALL_DIR, self.path)
 
-	def append_points(self):
+	def named_append_points(self):
 		append_points = set()
 
 		for path in self.real_paths():
@@ -124,7 +124,7 @@ class ConfigFile(object):
 				for line in file:
 					match = AP_IDENTIFIER.match(line)
 
-					if match:
+					if match and match.group(1):
 						append_points.add(match.group(1))
 
 		return append_points
@@ -143,7 +143,7 @@ class ConfigFile(object):
 		ap_name = match.group(2);
 
 		# Check if the target file has the append point
-		return match.group(2) in target_file.append_points()
+		return match.group(2) in target_file.named_append_points()
 
 
 config = Configuration()
