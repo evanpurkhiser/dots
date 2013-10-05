@@ -15,7 +15,7 @@ os.chdir(SOURCE_DIR)
 INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '/.config'))
 
 # The named append point identifier in files
-AP_IDENTIFIER = re.compile('^!!@@(\w*)$')
+AP_IDENTIFIER = '!!@@'
 
 
 class Configuration(object):
@@ -121,12 +121,10 @@ class ConfigFile(object):
 		for path in self.real_paths():
 			with open(path, 'r') as file:
 				for line in file:
-					match = AP_IDENTIFIER.match(line)
+					if line.startswith(AP_IDENTIFIER):
+						append_points.add(line[len(AP_IDENTIFIER):-1])
 
-					if match and match.group(1):
-						append_points.add(match.group(1))
-
-		return append_points
+		return filter(None, append_points)
 
 	def is_named_fragment(self):
 		match = re.match('^(.+)\.(.+)$', self.name())
