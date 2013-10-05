@@ -224,5 +224,20 @@ class ConfigFile(object):
 			except:
 				compiled += ['\n'] + single_file
 
+		# Handle merging in the named append points
+		for name in self.named_append_points():
+			appending_file = ConfigFile(self.path + '.' + name, self.config)
+			appending_data = appending_file.compile().compiled
+
+			# Replace all instances of this named append point
+			while True:
+				try:
+					slice_at = compiled.index(AP_IDENTIFIER + name + '\n')
+				except:
+					break
+
+				del compiled[slice_at]
+				compiled[slice_at:1] = appending_data
+
 
 				file_data.append(contents)
