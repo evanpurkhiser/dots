@@ -129,6 +129,22 @@ class ConfigFile(object):
 
 		return append_points
 
+	def is_named_fragment(self):
+		match = re.match("^(.+)\.(.+)$", self.name())
+
+		if not match:
+			return False
+
+		# Get the target configuration file
+		target_path = os.path.join(self.directory(), match.group(1))
+		target_file = ConfigFile(target_path, self.config)
+
+		# The named append point to look for
+		ap_name = match.group(2);
+
+		# Check if the target file has the append point
+		return match.group(2) in target_file.append_points()
+
 
 config = Configuration()
 
