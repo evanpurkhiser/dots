@@ -145,9 +145,28 @@ class ConfigFile(object):
 		# Check if the target file has the append point
 		return match.group(2) in target_file.named_append_points()
 
+	def compile(self):
+		self.compiled_file = None
+		file_data = []
 
-config = Configuration()
+		# Read all file paths into arrays
+		# This may be memory inefficient and may have to be changed later
+		for path in self.real_paths():
+			with open(path, 'r') as file:
+				contents = file.readlines()
 
-config.groups = ['base', 'common/workstation', 'common/graphical', 'machines/desktop']
+				# Replace front and back empty lines with None
+				for iterator in [enumerate(contents), reversed(list(enumerate(contents)))]:
+					for i, line in iterator:
+						if line.isspace():
+							contents[i] = None
+						else: break
 
-config.save_to_file()
+				# Trim front and back empty lines
+				contents = filter(None, contents)
+
+				# Ensure a trailing newline
+				if not contents[-1].endswith('\n'):
+					contents[-1] += '\n'
+
+				file_data.append(contents)
