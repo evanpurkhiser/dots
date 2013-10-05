@@ -49,7 +49,7 @@ class Configuration(object):
 		groups = [ x.strip('/') for x in groups]
 		
 		if set(groups).difference(self.valid_groups):
-			raise "One of the passed groups does not exist in the source tree"
+			raise Exception("One of the passed groups does not exist in the source tree")
 		
 		self._groups = groups
 		return groups
