@@ -66,8 +66,7 @@ class Configuration(object):
 			try:
 				self.groups = f.readlines()
 			except:
-				print "The loaded config group file contains invalid groups"
-				print "Use dots set-groups [group1,group2,...] to reset it"
+				raise Exception("The loaded config file contains invalid groups")
 
 	# This will save the currently defined list of groups for this configuration
 	# into the groups file
