@@ -93,6 +93,18 @@ class Configuration(object):
 
 class ConfigFile(object):
 
+	@staticmethod
+	def trim_file_whitespace(file_lines):
+		"""Remove whiteface elements from the beginning and ends of a list"""
+		for iterator in [enumerate(file_lines), reversed(list(enumerate(file_lines)))]:
+			for i, line in iterator:
+				if line.isspace():
+					file_lines[i] = None
+				else: break
+
+		# Trim front and back empty lines
+		return filter(None, file_lines)
+
 	def __init__(self, relative_path, config):
 		self.path = relative_path
 		self.config = config
@@ -170,14 +182,7 @@ class ConfigFile(object):
 				contents = file.readlines()
 
 				# Replace front and back empty lines with None
-				for iterator in [enumerate(contents), reversed(list(enumerate(contents)))]:
-					for i, line in iterator:
-						if line.isspace():
-							contents[i] = None
-						else: break
-
-				# Trim front and back empty lines
-				contents = filter(None, contents)
+				contents = self.trim_file_whitespace(contents)
 
 				# Ensure a trailing newline
 				if not contents[-1].endswith('\n'):
