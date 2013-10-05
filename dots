@@ -136,10 +136,6 @@ class ConfigFile(object):
 		paths = [os.path.join(SOURCE_DIR, group, self.path) for group in self.config.groups]
 		return [p for p in paths if os.path.exists(p)]
 
-	def install_path(self):
-		"""Get the install path for this configuration file"""
-		return os.path.join(INSTALL_DIR, self.path)
-
 	def mode(self):
 		"""Determine the mode of this file. If the file has multiple overriding
 		files that don't have matching permissions, then the highest mode will
@@ -257,11 +253,10 @@ class ConfigFile(object):
 
 		return self
 
-	def diff_installed(self):
+	def diff(self, against=INSTALL_PATH):
 		"""Display a diff of the compiled file contest against the currently
-		installed version of this file.
-
-		This uses git as an external command to do the diffing"""
+		installed version of this file. This uses git as an external command to
+		do the diffing"""
 		if not self.compiled: self.compile()
 
 		# Create a named temporary file to allow git to diff
@@ -270,4 +265,4 @@ class ConfigFile(object):
 				file.write(line)
 			file.flush()
 
-			os.system(GIT_DIFF.format(path1=self.install_path(), path2=file.name))
+			os.system(GIT_DIFF.format(path1=os.path.join(against, self.path), path2=file.name))
