@@ -266,3 +266,22 @@ class ConfigFile(object):
 			file.flush()
 
 			os.system(GIT_DIFF.format(path1=os.path.join(against, self.path), path2=file.name))
+
+	def install(self, to):
+		"""Install this file to a location"""
+		if not self.compiled: self.compile()
+
+		# Ensure directory exists for file
+		path = os.path.join(to, self.path)
+		try:
+			os.makedirs(os.path.dirname(path))
+		except:
+			pass
+
+		# Write the file
+		with open(path, 'wb') as file:
+			for line in self.compiled:
+				file.write(line)
+
+		# Set the file's mode
+		os.chmod(path, self.mode())
