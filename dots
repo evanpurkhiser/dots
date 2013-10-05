@@ -71,6 +71,26 @@ class Configuration(object):
 		with open(self.group_file, 'w+') as f:
 			f.write("\n".join(self.groups))
 
+class ConfigFile(object):
+
+	def __init__(self, relative_path, config):
+		self.path = relative_path
+		self.config = config
+
+	def file_name(self):
+		return os.path.basename(self.path)
+
+	def directory(self):
+		return os.path.dirname(self.path)
+
+	def real_paths(self):
+		paths = [os.path.join(SOURCE_DIR, group, self.path) for group in self.config.groups]
+		return [p for p in paths if os.path.exists(p)]
+
+	def install_path(self):
+		return os.path.join(INSTALL_DIR, self.path)
+
+
 
 config = Configuration()
 
