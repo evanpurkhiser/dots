@@ -28,7 +28,7 @@ class Configuration(object):
 	# Determine which groups are valid by looking at the directory structure of
 	# that the script is installed in. Groups not defined in the
 	# single_directory_groups array will be considered nested groups
-	valid_groups = [g for g in glob.glob("*/*") if not
+	valid_groups = [g for g in glob.glob('*/*') if not
 			g.startswith(tuple(single_directory_groups))] + \
 			single_directory_groups
 
@@ -73,7 +73,7 @@ class Configuration(object):
 	# into the groups file
 	def save_to_file(self):
 		with open(self.group_file, 'w+') as f:
-			f.write("\n".join(self.groups))
+			f.write('\n'.join(self.groups))
 
 	# Get a list of all files that will be installed for this particular
 	# configuration. The paths are relative and will not include group names
@@ -130,7 +130,7 @@ class ConfigFile(object):
 		return append_points
 
 	def is_named_fragment(self):
-		match = re.match("^(.+)\.(.+)$", self.name())
+		match = re.match('^(.+)\.(.+)$', self.name())
 
 		if not match:
 			return False
