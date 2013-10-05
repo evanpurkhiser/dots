@@ -2,6 +2,7 @@
 
 import sys, os
 import glob
+import re
 
 # Locate the configuration directory that all source configuration files are
 # stored in. This _should_ be the same directory that this script is located in
@@ -12,6 +13,9 @@ os.chdir(SOURCE_DIR)
 
 # Get the location that we will be installing all of the files into
 INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '/.config'))
+
+# The named append point identifier in files
+AP_IDENTIFIER = re.compile('^!!@@(\w*)$')
 
 
 class Configuration(object):
@@ -90,6 +94,18 @@ class ConfigFile(object):
 	def install_path(self):
 		return os.path.join(INSTALL_DIR, self.path)
 
+	def append_points(self):
+		append_points = set()
+
+		for path in self.real_paths():
+			with open(path, 'r') as file:
+				for line in file:
+					match = AP_IDENTIFIER.match(line)
+
+					if match:
+						append_points.add(match.group(1))
+
+		return append_points
 
 
 config = Configuration()
