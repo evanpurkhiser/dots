@@ -101,8 +101,9 @@ class ConfigFile(object):
 	def __init__(self, relative_path, config):
 		self.path = relative_path
 		self.config = config
+		self.mmaped_file = None
 
-	def file_name(self):
+	def name(self):
 		return os.path.basename(self.path)
 
 	def directory(self):
