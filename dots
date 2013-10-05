@@ -75,6 +75,27 @@ class Configuration(object):
 		with open(self.group_file, 'w+') as f:
 			f.write("\n".join(self.groups))
 
+	# Get a list of all files that will be installed for this particular
+	# configuration. The paths are relative and will not include group names
+	def files(self):
+		files_set = set()
+
+		for group in self.groups:
+			for root,_, files in os.walk(group):
+				root  = root[len(group) + 1:]
+				files = [os.path.join(root, file) for file in files]
+
+				[files_set.add(path) for path in files]
+
+		# Get files as ConfigFile objects
+		files = [ConfigFile(file, self) for file in files_set]
+
+		# Don't inclde named_fragment files
+		return [f for f in files if not f.is_named_fragment()]
+
+
+
+
 class ConfigFile(object):
 
 	def __init__(self, relative_path, config):
