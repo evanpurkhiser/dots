@@ -3,6 +3,7 @@
 import sys, os
 import glob
 import re
+import tempfile
 
 # Locate the configuration directory that all source configuration files are
 # stored in. This _should_ be the same directory that this script is located in
@@ -16,6 +17,9 @@ INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '/.c
 
 # The named append point identifier in files
 AP_IDENTIFIER = '!!@@'
+
+# The command to use to diff with git
+GIT_DIFF = 'git diff --diff-filter=MA -- {path1} {path2}'
 
 class Configuration(object):
 
@@ -247,3 +251,17 @@ class ConfigFile(object):
 
 		return self
 
+	def diff_installed(self):
+		"""Display a diff of the compiled file contest against the currently
+		installed version of this file.
+
+		This uses git as an external command to do the diffing"""
+		if not self.compiled: self.compile()
+
+		# Create a named temporary file to allow git to diff
+		with tempfile.NamedTemporaryFile() as file:
+			for line in self.compiled:
+				file.write(line)
+			file.flush()
+
+			os.system(GIT_DIFF.format(path1=self.install_path(), path2=file.name))
