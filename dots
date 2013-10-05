@@ -17,7 +17,6 @@ INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '/.c
 # The named append point identifier in files
 AP_IDENTIFIER = '!!@@'
 
-
 class Configuration(object):
 
 	# This is a list of groups that are only a single directory deep and do not
@@ -41,14 +40,14 @@ class Configuration(object):
 		self.group_file = group_file
 		self.groups = groups
 
-	# Return the list of groups configured for this system
 	@property
 	def groups(self):
+		"""Return the list of groups configured for this system"""
 		return self._groups
 
-	# Set the list of groups for this configuration
 	@groups.setter
 	def groups(self, groups):
+		"""Set the list of groups for this configuration"""
 		# Trim trailing and leading slashes
 		groups = [ x.strip('/') for x in groups]
 		
@@ -58,25 +57,25 @@ class Configuration(object):
 		self._groups = groups
 		return groups
 
-	# Load groups from the configuration groups file
-	# This will complain if one of the groups specified in the file doesn't
-	# exist in the source tree (meaning it's considered an 'invalid group'
 	def load_from_file(self):
+		"""Load groups from the configuration groups file
+		This will complain if one of the groups specified in the file doesn't
+		exist in the source tree (meaning it's considered an 'invalid group'"""
 		with open(self.group_file, 'a') as f:
 			try:
 				self.groups = f.readlines()
 			except:
 				raise Exception("The loaded config file contains invalid groups")
 
-	# This will save the currently defined list of groups for this configuration
-	# into the groups file
 	def save_to_file(self):
+		"""This will save the currently defined list of groups for this configuration
+		into the groups file"""
 		with open(self.group_file, 'w+') as f:
 			f.write('\n'.join(self.groups))
 
-	# Get a list of all files that will be installed for this particular
-	# configuration. The paths are relative and will not include group names
 	def files(self):
+		"""Get a list of all files that will be installed for this particular
+		configuration. The paths are relative and will not include group names"""
 		files_set = set()
 
 		for group in self.groups:
@@ -89,33 +88,36 @@ class Configuration(object):
 		# Get files as ConfigFile objects
 		files = [ConfigFile(file, self) for file in files_set]
 
-		# Don't inclde named_fragment files
+		# Don't include named_fragment files
 		return [f for f in files if not f.is_named_fragment()]
-
-
-
 
 class ConfigFile(object):
 
 	def __init__(self, relative_path, config):
 		self.path = relative_path
 		self.config = config
-		self.mmaped_file = None
+		self.compiled = None
 
 	def name(self):
+		"""Get the name of the file"""
 		return os.path.basename(self.path)
 
 	def directory(self):
+		"""Get the directory the file is located in"""
 		return os.path.dirname(self.path)
 
 	def real_paths(self):
+		"""Get the real path of the source file"""
 		paths = [os.path.join(SOURCE_DIR, group, self.path) for group in self.config.groups]
 		return [p for p in paths if os.path.exists(p)]
 
 	def install_path(self):
+		"""Get the install path for this configuration file"""
 		return os.path.join(INSTALL_DIR, self.path)
 
 	def named_append_points(self):
+		""" Get a list of named append points in this file that will
+		include fragments"""
 		append_points = set()
 
 		for path in self.real_paths():
@@ -127,6 +129,8 @@ class ConfigFile(object):
 		return filter(None, append_points)
 
 	def is_named_fragment(self):
+		"""Check if this configuration file is actually a named fragment for
+		another file"""
 		match = re.match('^(.+)\.(.+)$', self.name())
 
 		if not match:
@@ -143,6 +147,19 @@ class ConfigFile(object):
 		return match.group(2) in target_file.named_append_points()
 
 	def compile(self):
+		"""Compile this configuration file. This will take each file from the
+		group and merge it based on these rules:
+
+		 1. Files will be merged down from top to bottom.
+
+		 2. If the file being merged into includes an explicit append point it
+		    will be merged at that location. Else it will just be appended to
+			the end of the file being merged into.
+
+		 3. If the file has named append points then we will look for a fragment
+		    file that matches the append point name, if we can find it it will be
+		    merged in.
+		"""
 		self.compiled = None
 		compiling_files = []
 
