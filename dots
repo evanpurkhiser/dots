@@ -8,8 +8,6 @@ import tempfile
 # Locate the configuration directory that all source configuration files are
 # stored in. This _should_ be the same directory that this script is located in
 SOURCE_DIR = os.path.dirname(os.path.realpath(__file__))
-
-# Put us in the source directory for convenience
 os.chdir(SOURCE_DIR)
 
 # Get the location that we will be installing all of the files into
@@ -53,7 +51,7 @@ class Configuration(object):
 	def groups(self, groups):
 		"""Set the list of groups for this configuration"""
 		# Trim trailing and leading slashes
-		groups = [ x.strip('/') for x in groups]
+		groups = [x.strip('/') for x in groups]
 		
 		if set(groups).difference(self.valid_groups):
 			raise Exception("One of the passed groups does not exist in the source tree")
@@ -203,8 +201,7 @@ class ConfigFile(object):
 
 		 3. If the file has named append points then we will look for a fragment
 		    file that matches the append point name, if we can find it it will be
-		    merged in.
-		"""
+		    merged in."""
 		self.compiled = None
 		compiling_files = []
 
