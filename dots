@@ -76,16 +76,16 @@ class Configuration(object):
 			f.write('\n'.join(self.groups))
 
 	def files(self):
-		"""Get a list of all files that will be installed for this particular
-		configuration. The paths are relative and will not include group names"""
+		"""Get all configuration file objects that are to be installed"""
 		files_set = set()
 
 		for group in self.groups:
 			for root,_, files in os.walk(group):
-				root  = root[len(group) + 1:]
-				files = [os.path.join(root, file) for file in files]
+				# Trim the group name from the directory path
+				root = root[len(group) + 1:]
 
-				[files_set.add(path) for path in files]
+				for file in files:
+					files_set.add(os.path.join(root, file))
 
 		# Get files as ConfigFile objects
 		files = [ConfigFile(file, self) for file in files_set]
