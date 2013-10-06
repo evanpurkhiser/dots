@@ -16,6 +16,9 @@ INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '/.c
 # The named append point identifier in files
 AP_IDENTIFIER = '!!@@'
 
+# The file extension used to identify 'overriding' files
+OVERRIDE_EXT = '.override'
+
 # The command to use to diff with git
 GIT_DIFF = 'git diff --diff-filter=MA -- {path1} {path2}'
 
@@ -85,6 +88,12 @@ class Configuration(object):
 				root = root[len(group) + 1:]
 
 				for file in files:
+					# Remove the override extension. This will is going to be
+					# installed without this extension, ConfigFile.real_paths
+					# will handle locating this file
+					if file.endswith(OVERRIDE_EXT):
+						file = file[:-len(OVERRIDE_EXT)]
+
 					files_set.add(os.path.join(root, file))
 
 		# Get files as ConfigFile objects
@@ -148,8 +157,20 @@ class ConfigFile(object):
 		return os.path.dirname(self.path)
 
 	def real_paths(self):
-		"""Get the real path of the source file"""
+		"""Get the real paths of the source file"""
 		paths = [os.path.join(SOURCE_DIR, group, self.path) for group in self.config.groups]
+
+		# Check for overriding files and remove previous paths accordingly
+		# We must iterate in reverse since the paths list starts at the file in
+		# the lowest priority group
+		for i, path in reversed(list(enumerate(paths))):
+			# Skip if there is no overriding file in this group
+			if not os.path.exists(path + OVERRIDE_EXT): continue
+
+			# Use the overriding file and ignore all previous paths
+			paths[i] = path + OVERRIDE_EXT
+			paths = paths[i:]
+
 		return [p for p in paths if os.path.exists(p)]
 
 	def mode(self):
