@@ -1,4 +1,68 @@
 #!/bin/env python2.7
+#
+# dots - A cascading dot file management tool
+#
+# The dots utility is used to manage a grouping of dotfiles for various
+# environments and UNIX like platforms. The primary goal of this utility it to
+# facilitate the logical separation of dotfiles and providing the ability to
+# 'compile' this organization into a usable directory tree of files.
+#
+# DIRECTORY STRUCTURE AND GROUPINGS
+#
+# By default configuration files should be stored two subdirectories deep from
+# the location where this script is located. For example `machines/desktop/`
+# could be used to store configuration files specific to a users desktop
+# machine. The exception to this is the `base` group, which is only one
+# directory deep.
+#
+# You may have as many configuration groupings as you would like.
+#
+# CASCADING OF CONFIGURATION FILES
+#
+# If two groups are specified for a configuration environment that both contain
+# the same configuration file, then the file will 'cascade'. What this means is
+# that the file in the second group will be appended to the first group.
+#
+# OVERRIDING AND EXTENDING
+#
+# The cascading logic can be modified by 'overriding' or 'extending' a file.
+#
+# Overriding a file allows you to force configuration files that exist earlier
+# in the configuration environment groups list to be discarded instead of being
+# used as the base for a configuration file to be appended to. For example:
+#
+#    base/bash/bashrc
+#    machines/desktop/bash/bashrc.override
+#
+#    groups = ['base', 'machines/desktop']
+#
+# Instead of the machines/desktop version of the bashrc file being amended to
+# the base bashrc file, it will simply discard the base version of the file.
+#
+# Extending a file allows you to specify 'explicit append points' in a file.
+# This way instead of having a cascading file be appended to the end, it could
+# be appended somewhere else. Continuing from the last example (without the
+# .override):
+#
+# If the `base/bash/bashrc` file contains the symbol `!!@@' in the file, this is
+# where the `machines/desktop/bash/bashrc` file would be appended.
+#
+# You may also use 'named append points'. This allows you to insert 'fragment'
+# files into a file. For example, say we have the following files:
+#
+#    base/bash/bashrc
+#    base/bash/bashrc.aliases
+#
+# If somewhere within the `base/bash/bashrc` file we have the symbol
+# '!!@@aliases' then the `bashrc.aliases` file would be appended at.
+#
+# Fragment files are subject to all of the same logic described above
+# (extending, append points, and even named append points)
+#
+# PROGRAM USAGE
+#
+# The following commands are available:
+#
 
 import sys, os, shutil
 import glob
@@ -214,7 +278,8 @@ class ConfigFile(object):
 		"""Compile this configuration file. This will take each file from the
 		group and merge it based on these rules:
 
-		 1. Files will be merged down from top to bottom.
+		 1. Files will be merged down from lowest priority groups (specified
+		    first) to highest priority (specified last)
 
 		 2. If the file being merged into includes an explicit append point it
 		    will be merged at that location. Else it will just be appended to
