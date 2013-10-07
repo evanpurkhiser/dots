@@ -61,8 +61,41 @@
 #
 # PROGRAM USAGE
 #
-# The following commands are available:
+# The following commands and options are available:
 #
+# -c       Specify the file to load and save configuration environment groups
+#          lists to. If not specified the default configuration file will be used
+#
+# groups   Manage available configuration groups
+#
+#          list     List all configuration groups that are available to be
+#                   specified for a configuration environment list
+#
+#          current  Get the current configuration environment groups
+#
+#          set      Specify a space separated list of valid configuration groups
+#                   to enable for this environment
+#
+# diff     Get the difference between the source files, and currently installed
+#          configuration files
+#
+#          [FILES]  A list of one or more files to check. If this is omitted
+#                   then the entire tree of source configuration files will be
+#                   diffed
+#
+# install  Compile and install one or more configuration files into a location.
+#          If no specific files are specified then the entire source tree will
+#          be installed into the specified location and after-install scripts
+#          will be executed
+#
+#          [FILES]  A list of one or more files to install into the specified
+#                   location. If ommited the entire tree will be installed
+#
+#          -l       Specify the location to install the configuration files to.
+#                   If omitted the default XDG_CONFIG_HOME path will be used
+#
+#          -c       Confirm with a diff before overwriting already existing
+#                   configuration files in the install location
 
 import sys, os, shutil
 import glob
