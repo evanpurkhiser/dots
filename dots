@@ -426,6 +426,6 @@ class ConfigFile(object):
 		# Set the file's mode
 		os.chmod(path, self.mode())
 
-if len(sys.argv) < 2 or sys.argv[1] == 'help':
+if len(sys.argv) < 2 or re.search("(--?)?h(elp)?", sys.argv[1]):
 	print USAGE
 	exit()
