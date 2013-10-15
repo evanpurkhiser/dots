@@ -63,7 +63,7 @@
 #
 # See USAGE variable
 
-import sys, os, shutil
+import sys, os, shutil, subprocess
 import glob
 import re
 import tempfile
@@ -123,7 +123,7 @@ AP_IDENTIFIER = '!!@@'
 OVERRIDE_EXT = '.override'
 
 # The command to use to diff with git
-GIT_DIFF = 'git diff --diff-filter=MA -- {path1} {path2}'
+GIT_DIFF = ['git', 'diff', '--diff-filter=MA', '--']
 
 class Configuration(object):
 
@@ -218,7 +218,7 @@ class Configuration(object):
 		temp_dir = tempfile.mkdtemp()
 		self.install_tree(temp_dir)
 
-		os.system(GIT_DIFF.format(path1=INSTALL_DIR, path2=temp_dir))
+		subprocess.call(GIT_DIFF + [INSTALL_DIR, temp_dir])
 
 		shutil.rmtree(temp_dir)
 
@@ -405,7 +405,7 @@ class ConfigFile(object):
 				file.write(line)
 			file.flush()
 
-			os.system(GIT_DIFF.format(path1=os.path.join(against, self.path), path2=file.name))
+			subprocess.call(GIT_DIFF + [os.path.join(against, self.path), file.name])
 
 	def install(self, to):
 		"""Install this file to a location"""
