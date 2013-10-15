@@ -70,6 +70,8 @@ import tempfile
 
 USAGE="""dots - A dot file pre-processor and installer
 
+dots [-c config-file] COMMAND [options]
+
 The following commands and options are available:
 
 -c       Specify the file to load and save configuration environment groups
