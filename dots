@@ -67,6 +67,7 @@ import sys, os, shutil, subprocess
 import glob
 import re
 import tempfile
+import argparse
 
 USAGE="""dots - A dot file pre-processor and installer
 
@@ -428,6 +429,69 @@ class ConfigFile(object):
 		# Set the file's mode
 		os.chmod(path, self.mode())
 
-if len(sys.argv) < 2 or re.search("(--?)?h(elp)?", sys.argv[1]):
-	print USAGE
-	exit()
+# Setup the argument parser
+parser = argparse.ArgumentParser(description="A dot file pre-processor and installer")
+
+# Handle getting the configuration path
+parser.add_argument('-c', '--config',
+	default=Configuration.default_group_file,
+	help="""Specify the file to load and save configuration environment groups
+	lists to. If not specified the default configuration file will be used""")
+
+# Setup the sub-commands
+sub_commands = parser.add_subparsers()
+
+# The groups command...
+groups = sub_commands.add_parser('groups',
+	help="""Manage available configuration groups""")
+
+# Groups sub commands
+groups_commands = groups.add_subparsers(dest='group-command')
+
+groups_available = groups_commands.add_parser('available',
+	help="""List all configuration groups that are available to be specified
+	for a configuration environment list""")
+
+groups_current = groups_commands.add_parser('current',
+	help="""Get the current configuration environment groups""")
+
+groups_set = groups_commands.add_parser('set',
+	help="""Set the configuration groups for this machines environment""")
+
+groups_set.add_argument('group',
+	nargs='+',
+	help="""A space separated list of valid configuration groups to enable""")
+
+# The diff sub command...
+diff = sub_commands.add_parser('diff',
+	help="""Get the difference between the source file, and currently installed
+	configuration files""")
+
+diff.add_argument('file',
+	nargs='*',
+	help="""A list of one more more files to check. If this is omitted then the
+	entire tree of source configuration files will be diffed""")
+
+# The install sub command...
+install = sub_commands.add_parser('install',
+	help="""Compile and install one or more configuration files into a
+	location.  If no specific files are specified then the entire source tree
+	will be installed into the specified location and after-install scripts
+	will be executed""")
+
+install.add_argument('-l', '--location',
+	help="""Specify the location to install the configuration file to. If
+	omitted the default XDG_CONFIG_HOME path will be used""")
+
+install.add_argument('-i', '--confirm',
+	help="""Confirm with a diff before overwriting already existing
+	configuration files in the install location""")
+
+install.add_argument('file',
+	nargs='*',
+	help="""A list of one or more files to install into the specified location.
+	If omitted the entire tree will be installed""")
+
+args = parser.parse_args()
+
+print args
