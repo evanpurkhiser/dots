@@ -340,7 +340,7 @@ class ConfigFile(object):
 				contents = self.trim_file_whitespace(contents)
 
 				# Ensure a trailing newline
-				if not contents[-1].endswith('\n'):
+				if contents and not contents[-1].endswith('\n'):
 					contents[-1] += '\n'
 
 				# Ensure the file only has one explicit default append point
