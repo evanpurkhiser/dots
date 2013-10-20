@@ -95,9 +95,9 @@ groups   Manage available configuration groups
 diff     Get the difference between the source files, and currently installed
          configuration files
 
-         [FILES]  A list of one or more files to check. If this is omitted
-                  then the entire tree of source configuration files will be
-                  diffed
+         [PATHS]  A list of one or more files or pahs to check. If this is
+                  omitted then the entire tree of source configuration files
+                  will be diffed
 
 install  Compile and install one or more configuration files into a location.
          If no specific files are specified then the entire source tree will
@@ -499,7 +499,7 @@ if args.command == 'groups':
 		config.save_to_file()
 
 elif args.command == 'diff':
-	pass
+	config.diff_installed(args.file);
 
 elif args.command == 'install':
 	pass
