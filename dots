@@ -172,11 +172,13 @@ class Configuration(object):
 		"""Load groups from the configuration groups file
 		This will complain if one of the groups specified in the file doesn't
 		exist in the source tree (meaning it's considered an 'invalid group'"""
-		with open(self.group_file, 'a') as f:
+		if not os.path.exists(self.group_file): return
+
+		with open(self.group_file, 'r') as f:
 			try:
-				self.groups = f.readlines()
+				self.groups = f.read().splitlines()
 			except:
-				raise Exception("The loaded config file contains invalid groups")
+				raise Exception("Unable to load groups from configuration file")
 
 	def save_to_file(self):
 		"""This will save the currently defined list of groups for this configuration
