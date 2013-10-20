@@ -224,18 +224,19 @@ class Configuration(object):
 		# Don't include named_fragment files
 		return [f for f in files if not f.is_named_fragment()]
 
-	def install_tree(self, to=None):
+	def install_tree(self, to=None, path_filters=None):
 		"""Install the configuration tree into a specific directory"""
 		if not to: to = INSTALL_DIR
 
 		# Install all files to the location
-		[f.install(to) for f in self.files()]
+		[f.install(to) for f in self.files(path_filters)]
 
-	def diff_installed(self):
+	def diff_installed(self, path_filters=None):
 		"""Run a diff against the currently installed tree. This uses git as an
-		external command to do the diffing"""
+		external command to do the diffing. If a list of file paths are passed
+		in then only those files will be diffed"""
 		temp_dir = tempfile.mkdtemp()
-		self.install_tree(temp_dir)
+		self.install_tree(temp_dir, path_filters)
 
 		subprocess.call(GIT_DIFF + [INSTALL_DIR, temp_dir])
 
