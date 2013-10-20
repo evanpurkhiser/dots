@@ -93,15 +93,17 @@ groups   Manage available configuration groups
          clear    Remove all current groups from the configuration file
 
 diff     Get the difference between the source files, and currently installed
-         configuration files. This will use git-diff to do thge diffing, thus
-         you may pass any valid git-diff options such as --shortstat
+         configuration files. This should be though of as a representation of
+         'what will change' when you install. This will use git-diff to do the
+         diffing, thus you may pass any valid git-diff options such as
+         --shortstat
 
-         [PATHS]  A list of one or more files or pahs to check. If this is
+         [PATHS]  A list of one or more files or paths to check. If this is
                   omitted then the entire tree of source configuration files
                   will be diffed
 
 install  Compile and install one or more configuration files into a location.
-         If no specific files are specified then the entire source tree will
+         If no specific paths are specified then the entire source tree will
          be installed into the specified location and after-install scripts
          will be executed
 
