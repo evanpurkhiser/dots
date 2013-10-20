@@ -150,8 +150,7 @@ class Configuration(object):
 
 	# This is the default groups file that the configuration group listing for
 	# the machine should be stored in
-	default_group_file = os.path.join(os.getenv('XDG_CACHE_HOME',
-		os.path.join(os.environ['HOME'], '.cache')), 'config-group')
+	default_group_file = os.path.join(INSTALL_DIR, 'config-groups')
 
 	def __init__(self, group_file=default_group_file, groups=[]):
 		self.group_file = group_file
