@@ -63,6 +63,8 @@
 #
 # See USAGE variable
 
+from __future__ import print_function
+
 import sys, os, shutil, subprocess
 import glob
 import re
@@ -451,10 +453,11 @@ groups_commands = groups.add_subparsers(dest='group_command')
 
 groups_available = groups_commands.add_parser('available', add_help=False)
 groups_current   = groups_commands.add_parser('current',   add_help=False)
+groups_clear     = groups_commands.add_parser('clear',     add_help=False)
 groups_set       = groups_commands.add_parser('set',       add_help=False)
 
 # Groups-set options
-groups_set.add_argument('groups', nargs='+')
+groups_set.add_argument('group', nargs='+')
 
 # Diff options
 diff.add_argument('files', nargs='*')
@@ -468,9 +471,19 @@ install.add_argument('files', nargs='*')
 args = parser.parse_args()
 
 config = Configuration(group_file=args.config)
+config.load_from_file()
 
 if args.command == 'groups':
-	pass
+	if args.group_command == 'available':
+		print('\n'.join(config.valid_groups + ['']), end='')
+	elif args.group_command == 'current':
+		print('\n'.join(config.groups + ['']), end='')
+	elif args.group_command == 'set':
+		config.groups = args.group
+		config.save_to_file()
+	elif args.group_command == 'clear':
+		config.groups = [];
+		config.save_to_file()
 
 elif args.command == 'diff':
 	pass
@@ -478,5 +491,5 @@ elif args.command == 'diff':
 elif args.command == 'install':
 	pass
 
-if args.command == 'help':
-	print USAGE
+elif args.command == 'help':
+	print(USAGE)
