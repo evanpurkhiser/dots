@@ -90,6 +90,8 @@ groups   Manage available configuration groups
          set      Specify a space separated list of valid configuration groups
                   to enable for this environment
 
+         clear    Remove all current groups from the configuration file
+
 diff     Get the difference between the source files, and currently installed
          configuration files
 
