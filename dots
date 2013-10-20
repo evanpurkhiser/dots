@@ -105,14 +105,12 @@ install  Compile and install one or more configuration files into a location.
          be installed into the specified location and after-install scripts
          will be executed
 
-         [FILES]  A list of one or more files to install into the specified
-                  location. If omitted the entire tree will be installed
+         [PATHS]  A list of one or more files or paths to install into the
+                  specified location. If omitted the entire tree will be
+                  installed
 
          -l       Specify the location to install the configuration files to.
                   If omitted the default XDG_CONFIG_HOME path will be used
-
-         -i       Confirm with a diff before overwriting already existing
-                  configuration files in the install location
 
 help     This help message"""
 
@@ -457,7 +455,7 @@ parser.add_argument('-c', '--config', default=Configuration.default_group_file)
 # Setup the sub-commands
 sub_commands = parser.add_subparsers(dest='command')
 
-# The help command
+# The main sub commands
 groups  = sub_commands.add_parser('groups',  add_help=False)
 diff    = sub_commands.add_parser('diff',    add_help=False)
 install = sub_commands.add_parser('install', add_help=False)
@@ -478,8 +476,7 @@ groups_set.add_argument('group', nargs='+')
 diff.add_argument('file', nargs='*')
 
 # Install options
-install.add_argument('-l', '--location')
-install.add_argument('-i', '--confirm')
+install.add_argument('-l', '--location', default=INSTALL_DIR)
 install.add_argument('file', nargs='*')
 
 # Parse arguments!
@@ -504,7 +501,7 @@ elif args.command == 'diff':
 	config.diff_installed(extra_args, args.file);
 
 elif args.command == 'install':
-	pass
+	config.install_tree(args.location, args.file)
 
 elif args.command == 'help':
 	print(USAGE)
