@@ -129,8 +129,9 @@ AP_IDENTIFIER = '!!@@'
 # The file extension used to identify 'overriding' files
 OVERRIDE_EXT = '.override'
 
-# The command to use to diff with git
-GIT_DIFF = ['git', 'diff', '--diff-filter=MA', '--']
+# Helper function to execute a git diff process
+def git_diff(git_args, path1, path2):
+	subprocess.call(['git', 'diff', '--diff-filter=MA'] + git_args + [path1, path2])
 
 class Configuration(object):
 
@@ -231,15 +232,14 @@ class Configuration(object):
 		# Install all files to the location
 		[f.install(to) for f in self.files(path_filters)]
 
-	def diff_installed(self, path_filters=None):
+	def diff_installed(self, git_args=[], path_filters=None):
 		"""Run a diff against the currently installed tree. This uses git as an
 		external command to do the diffing. If a list of file paths are passed
 		in then only those files will be diffed"""
 		temp_dir = tempfile.mkdtemp()
 		self.install_tree(temp_dir, path_filters)
 
-		subprocess.call(GIT_DIFF + [INSTALL_DIR, temp_dir])
-
+		git_diff(git_args, INSTALL_DIR, temp_dir)
 		shutil.rmtree(temp_dir)
 
 
@@ -413,7 +413,7 @@ class ConfigFile(object):
 
 		return self
 
-	def diff(self, against=INSTALL_DIR):
+	def diff(self, git_args=[], against=INSTALL_DIR):
 		"""Display a diff of the compiled file contest against the currently
 		installed version of this file. This uses git as an external command to
 		do the diffing"""
@@ -425,7 +425,8 @@ class ConfigFile(object):
 				file.write(line)
 			file.flush()
 
-			subprocess.call(GIT_DIFF + [os.path.join(against, self.path), file.name])
+			git_diff(git_args, os.path.join(against, self.path), file.name)
+
 
 	def install(self, to):
 		"""Install this file to a location"""
