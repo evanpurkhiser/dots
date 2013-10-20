@@ -93,7 +93,8 @@ groups   Manage available configuration groups
          clear    Remove all current groups from the configuration file
 
 diff     Get the difference between the source files, and currently installed
-         configuration files
+         configuration files. This will use git-diff to do thge diffing, thus
+         you may pass any valid git-diff options such as --shortstat
 
          [PATHS]  A list of one or more files or pahs to check. If this is
                   omitted then the entire tree of source configuration files
@@ -482,7 +483,7 @@ install.add_argument('-i', '--confirm')
 install.add_argument('file', nargs='*')
 
 # Parse arguments!
-args = parser.parse_args()
+args, extra_args = parser.parse_known_args()
 
 config = Configuration(group_file=args.config)
 config.load_from_file()
@@ -500,7 +501,7 @@ if args.command == 'groups':
 		config.save_to_file()
 
 elif args.command == 'diff':
-	config.diff_installed(args.file);
+	config.diff_installed(extra_args, args.file);
 
 elif args.command == 'install':
 	pass
