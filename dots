@@ -462,12 +462,12 @@ groups_set       = groups_commands.add_parser('set',       add_help=False)
 groups_set.add_argument('group', nargs='+')
 
 # Diff options
-diff.add_argument('files', nargs='*')
+diff.add_argument('file', nargs='*')
 
 # Install options
 install.add_argument('-l', '--location')
 install.add_argument('-i', '--confirm')
-install.add_argument('files', nargs='*')
+install.add_argument('file', nargs='*')
 
 # Parse arguments!
 args = parser.parse_args()
