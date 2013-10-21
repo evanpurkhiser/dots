@@ -70,6 +70,7 @@ import glob
 import re
 import tempfile
 import argparse
+import hashlib
 
 USAGE="""dots - A dot file pre-processor and installer
 
@@ -438,6 +439,14 @@ class ConfigFile(object):
 			os.makedirs(os.path.dirname(path))
 		except:
 			pass
+
+		# Test that the file hasn't changed
+		if os.path.exists(path):
+			installed = hashlib.md5(open(path).read()).digest()
+			compiled  = hashlib.md5(''.join(self.compiled)).digest()
+
+			if installed == compiled and os.stat(path).st_mode == self.mode():
+				return
 
 		# Write the file
 		with open(path, 'wb') as file:
