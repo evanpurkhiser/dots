@@ -103,6 +103,11 @@ diff     Get the difference between the source files, and currently installed
                   omitted then the entire tree of source configuration files
                   will be diffed
 
+files    List out all of the currently tracked configuration files for the
+         currently set configration groups
+
+         [PATHS]  A list of one or more paths to filter the list by
+
 install  Compile and install one or more configuration files into a location.
          If no specific paths are specified then the entire source tree will
          be installed into the specified location and after-install scripts
@@ -468,6 +473,7 @@ sub_commands = parser.add_subparsers(dest='command')
 # The main sub commands
 groups  = sub_commands.add_parser('groups',  add_help=False)
 diff    = sub_commands.add_parser('diff',    add_help=False)
+files   = sub_commands.add_parser('files',   add_help=False)
 install = sub_commands.add_parser('install', add_help=False)
 helps   = sub_commands.add_parser('help',    add_help=False)
 
@@ -484,6 +490,9 @@ groups_set.add_argument('group', nargs='+')
 
 # Diff options
 diff.add_argument('file', nargs='*')
+
+# Files options
+files.add_argument('file', nargs='*')
 
 # Install options
 install.add_argument('-l', '--location', default=INSTALL_DIR)
@@ -509,6 +518,10 @@ if args.command == 'groups':
 
 elif args.command == 'diff':
 	config.diff_installed(extra_args, args.file);
+
+elif args.command == 'files':
+	files = [f.path for f in config.files(args.file)]
+	for file in sorted(files): print(file)
 
 elif args.command == 'install':
 	config.install_tree(args.location, args.file)
