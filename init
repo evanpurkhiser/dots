@@ -74,3 +74,4 @@ then
 fi
 
 echo -e "$ARROW_GOOD Dot files ready to be installed!"
+unset ARROW_GOOD ARROW_BAD ARROW_WARN CLONED_DIR INSTALL_DIR BIN_DIR
