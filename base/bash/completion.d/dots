@@ -1,0 +1,6 @@
+#!/bin/bash
+
+__dots_completions()
+{
+	return
+}
