@@ -32,15 +32,16 @@ BIN_DIR="$HOME/.local/bin"
 if [[ "$INSTALL_DIR" != "$CLONED_DIR" ]]
 then
 	# Make sure the installation directory isn't in use
-	if [[ "$(ls -A "$INSTALL_DIR")" ]]; then
+	if [ -e "$INSTALL_DIR" ] && ! find "$INSTALL_DIR" -maxdepth 0 -empty | read v
+	then
 		echo -e "$ARROW_BAD $INSTALL_DIR directory not empty"
 		return
 	fi
 
 	# Move everything over
 	echo -e "$ARROW_GOOD Moving $CLONED_DIR to $INSTALL_DIR"
-	rm -d "$INSTALL_DIR"
-	mv -f "$CLONED_DIR" "$INSTALL_DIR"
+	rm -fd "$INSTALL_DIR"
+	mv -f  "$CLONED_DIR" "$INSTALL_DIR"
 
 	# Get out of the empty directory if we were in it
 	[[ "$(pwd)" == "$CLONED_DIR" ]] && cd
