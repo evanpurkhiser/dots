@@ -40,7 +40,7 @@ then
 
 	# Move everything over
 	echo -e "$ARROW_GOOD Moving $CLONED_DIR to $INSTALL_DIR"
-	rm -fd "$INSTALL_DIR"
+	rm -fr "$INSTALL_DIR"
 	mv -f  "$CLONED_DIR" "$INSTALL_DIR"
 
 	# Get out of the empty directory if we were in it
