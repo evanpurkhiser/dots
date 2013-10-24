@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Initalization script which will do a few things:
+#
+#  1. Move the cloned directory into $HOME/.local/etc
+#  2. Link the dots executable into $HOME/.local/bin
+#  3. Add the $HOME/.local/bin directory to the $PATH if it isn't already
+#  4. Source the base/bash/completion.d/dots completion script
+#
+# This script MUST be sourced!
+
+if [[ $_ == $0 ]];
+then
+	echo "Please source me!"
+	exit 1
+fi
+
+ARROW_BAD="\e[0;31m==>\e[0m"
+ARROW_GOOD="\e[0;32m==>\e[0m"
+ARROW_WARN="\e[0;33m==>\e[0m"
+
+# The installation directory
+INSTALL_DIR="$HOME/.local/etc"
+
+# The directory that we just (presumably) cloned this into
+CLONED_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# The directory where the user keeps his executables
+BIN_DIR="$HOME/.local/bin"
+
+# 1. Move everything into the install directory if we need to
+if [[ "$INSTALL_DIR" != "$CLONED_DIR" ]]
+then
+	# Make sure the installation directory isn't in use
+	if [[ "$(ls -A "$INSTALL_DIR")" ]]; then
+		echo -e "$ARROW_BAD $INSTALL_DIR directory not empty"
+		return
+	fi
+
+	# Move everything over
+	echo -e "$ARROW_GOOD Moving $CLONED_DIR to $INSTALL_DIR"
+	rm -d "$INSTALL_DIR"
+	mv -f "$CLONED_DIR" "$INSTALL_DIR"
+
+	# Get out of the empty directory if we were in it
+	[[ "$(pwd)" == "$CLONED_DIR" ]] && cd
+fi
+
+# 2. Link the dots script into the users local bin
+if [[ ! -e "$BIN_DIR/dots" ]]
+then
+	echo -e "$ARROW_GOOD Linking $INSTALL_DIR/dots into $BIN_DIR"
+	mkdir -p "$BIN_DIR"
+	ln -s "$INSTALL_DIR/dots" "$BIN_DIR/"
+
+# If the dots file already exists in bin check if it's not the same
+elif [[ "$(readlink "$BIN_DIR/dots")" != "$INSTALL_DIR/dots" ]]
+then
+	echo -e "$ARROW_WARN $BIN_DIR/dots already exists!"
+fi
+
+# 3. Add the bin directory to the front of the path
+if [[ ":$PATH:" != *":$BIN_DIR:"* ]]
+then
+	echo -e "$ARROW_GOOD Temporarily adding $BIN_DIR to your PATH"
+	PATH="$HOME/.local/bin:$PATH"
+fi
+
+# 4. Source in the dots completion
+if ! type -t __dots_completions | grep -q '^function$' 2>/dev/null
+then
+	echo -e "$ARROW_GOOD Sourcing bash completions for dots"
+	source "$INSTALL_DIR/base/bash/completion.d/dots"
+fi
+
+echo -e "$ARROW_GOOD Dot files ready to be installed!"
