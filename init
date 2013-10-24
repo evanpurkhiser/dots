@@ -15,9 +15,9 @@ then
 	exit 1
 fi
 
-ARROW_BAD="\e[0;31m==>\e[0m"
-ARROW_GOOD="\e[0;32m==>\e[0m"
-ARROW_WARN="\e[0;33m==>\e[0m"
+ARROW_BAD="\033[0;31m==>\033[0m"
+ARROW_GOOD="\033[0;32m==>\033[0m"
+ARROW_WARN="\033[0;33m==>\033[0m"
 
 # The installation directory
 INSTALL_DIR="$HOME/.local/etc"
