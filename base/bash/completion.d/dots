@@ -1,6 +1,6 @@
 #!/bin/bash
 
-__dots_completions()
+_dots_completions()
 {
 	local base_cmds=(groups diff files install help)
 	local base_flags=(-c --config)
@@ -50,4 +50,4 @@ __dots_completions()
 	esac
 }
 
-complete -F __dots_completions dots
+complete -F _dots_completions dots
