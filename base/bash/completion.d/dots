@@ -2,5 +2,52 @@
 
 __dots_completions()
 {
-	return
+	local base_cmds=(groups diff files install help)
+	local base_flags=(-c --config)
+
+	local cur=${COMP_WORDS[$COMP_CWORD]}
+	local prev=${COMP_WORDS[$COMP_CWORD-1]}
+
+	# Determine the command position
+	local cmd_index=1
+	[[ ${COMP_WORDS[1]} == "-c" ]] && cmd_index=3
+
+	# Include additional flags for the first word
+	if [[ $COMP_CWORD == 1 ]]
+	then
+		COMPREPLY=( $(compgen -W "${base_cmds[*]} ${base_flags[*]}" -- $cur) )
+		return
+	fi
+
+	# Perform file completion for the config option
+	if [[ $cmd_index > $COMP_CWORD ]]
+	then
+		compopt -o default
+		return
+	fi
+
+	# Perform completion on the base command
+	if [[ $COMP_CWORD == $cmd_index ]]
+	then
+		COMPREPLY=( $(compgen -W "${base_cmds[*]}" -- $cur) )
+		return
+	fi
+
+	# Perform completion for sub-commands
+	case "${COMP_WORDS[$cmd_index]}" in
+		groups)
+			COMPREPLY=()
+			;;
+		diff)
+			COMPREPLY=()
+			;;
+		files)
+			COMPREPLY=()
+			;;
+		install)
+			COMPREPLY=()
+			;;
+	esac
 }
+
+complete -F __dots_completions dots
