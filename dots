@@ -83,7 +83,7 @@ The following commands and options are available:
 
 groups   Manage available configuration groups
 
-         list     List all configuration groups that are available to be
+         known    List all configuration groups that are available to be
                   specified for a configuration environment list
 
          current  Get the current configuration environment groups
@@ -480,7 +480,7 @@ helps   = sub_commands.add_parser('help',    add_help=False)
 # Groups sub commands
 groups_commands = groups.add_subparsers(dest='group_command')
 
-groups_available = groups_commands.add_parser('available', add_help=False)
+groups_available = groups_commands.add_parser('known', add_help=False)
 groups_current   = groups_commands.add_parser('current',   add_help=False)
 groups_clear     = groups_commands.add_parser('clear',     add_help=False)
 groups_set       = groups_commands.add_parser('set',       add_help=False)
@@ -505,7 +505,7 @@ config = Configuration(group_file=args.config)
 config.load_from_file()
 
 if args.command == 'groups':
-	if args.group_command == 'available':
+	if args.group_command == 'known':
 		print('\n'.join(config.valid_groups + ['']), end='')
 	elif args.group_command == 'current':
 		print('\n'.join(config.groups + ['']), end='')
