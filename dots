@@ -290,7 +290,7 @@ class ConfigFile(object):
 	@staticmethod
 	def insert_at_ap(file_lines, insert_lines, ap_name=''):
 		"""Insert a list of lines into the file_lines at a given append point.
-		This takes whitespace into account and will add the whitespace infront
+		This takes whitespace into account and will add the whitespace in front
 		of all inserted lines"""
 		# Locate the append point line (ignoring whitespace). This will throw an
 		# exception if the append point cannot be found. This should be expected
