@@ -25,6 +25,18 @@ __dots_path_comp()
 		# Don't add a space if there is more to complete
 		[[ "$trailing_trim" != "" ]] && compopt -o nospace
 
+		# Remove the slash if mark-directories is off
+		if ! _rl_enabled mark-directories
+		then
+			# If The current typed path doesnt have a slash in it yet check if
+			# it is the full first portion of a path and ignore everything after
+			# if it is. We don't have to do this once the typed path has a slash
+			# in it as the logic above will pick up on it
+			[[ "$2" != */* && "$path" == ${2}/* ]] && path="$2/$trailing_trim"
+
+			trailing_trim="/$trailing_trim"
+		fi
+
 		COMPREPLY[k++]="${path%%${trailing_trim}}"
 	done
 }
