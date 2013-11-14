@@ -1,5 +1,34 @@
 #!/bin/bash
 
+# Do completion from a passed list of paths
+#
+# Accepts 2 arguments
+# 1. The list of paths to complete from
+# 2. The current word being completed
+__dots_path_comp()
+{
+	# This forces readline to only display the last item separated by a slash
+	compopt -o filenames
+
+	local IFS=$'\n'
+	local k="${#COMPREPLY[@]}"
+
+	for path in $(compgen -W "$1" -- $2)
+	do
+		local trailing_trim
+
+		# Determine what to trim from the end
+		trailing_trim="${path#${2%/*}/}/"
+		trailing_trim="${trailing_trim#*/}"
+		trailing_trim="${trailing_trim%/}"
+
+		# Don't add a space if there is more to complete
+		[[ "$trailing_trim" != "" ]] && compopt -o nospace
+
+		COMPREPLY[k++]="${path%%${trailing_trim}}"
+	done
+}
+
 _dots_completions()
 {
 	local base_cmds=(groups diff files install help)
