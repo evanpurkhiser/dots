@@ -127,7 +127,7 @@ help     This help message"""
 SOURCE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # Get the location that we will be installing all of the files into
-INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '/.config'))
+INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '.config'))
 
 # The named append point identifier in files
 AP_IDENTIFIER = '!!@@'
