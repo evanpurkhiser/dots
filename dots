@@ -182,9 +182,11 @@ class Configuration(object):
 		"""Set the list of groups for this configuration"""
 		# Trim trailing and leading slashes
 		groups = [x.strip('/') for x in groups]
+
+		missing_groups = set(groups).difference(self.valid_groups)
 		
-		if set(groups).difference(self.valid_groups):
-			raise Exception("One of the passed groups does not exist in the source tree")
+		if missing_groups:
+			raise Exception("Configuration group does not exist: {}".format(", ".join(missing_groups)))
 		
 		self._groups = groups
 		return groups
@@ -193,13 +195,8 @@ class Configuration(object):
 		"""Load groups from the configuration groups file
 		This will complain if one of the groups specified in the file doesn't
 		exist in the source tree (meaning it's considered an 'invalid group'"""
-		if not os.path.exists(self.group_file): return
-
 		with open(self.group_file, 'r') as f:
-			try:
-				self.groups = f.read().splitlines()
-			except:
-				raise Exception("Unable to load groups from configuration file")
+			self.groups = f.read().splitlines()
 
 	def save_to_file(self):
 		"""This will save the currently defined list of groups for this configuration
