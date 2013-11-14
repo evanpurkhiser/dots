@@ -80,7 +80,27 @@ _dots_completions()
 			fi
 			;;
 		diff)
-			COMPREPLY=()
+			# Do git diff completion
+			if [[ "$cur" == --* ]]
+			then
+				local git_comp_file="/usr/share/bash-completion/completions/git"
+
+				# Load in the git completion file if nessicary
+				if [[ -z "$__git_diff_common_options" && -e "$git_comp_file" ]]
+				then
+					source "$git_comp_file"
+				fi
+
+				# If we were able to load it do completion with common options
+				if [[ -n "$__git_diff_common_options" ]]
+				then
+					COMPREPLY=( $(compgen -W "$__git_diff_common_options" -- $cur) )
+				fi
+
+			# Do file path completion
+			else
+				__dots_path_comp "$(dots files)" $cur
+			fi
 			;;
 		files)
 			__dots_path_comp "$(dots files)" $cur
