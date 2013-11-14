@@ -71,7 +71,7 @@ _dots_completions()
 			COMPREPLY=()
 			;;
 		files)
-			COMPREPLY=()
+			__dots_path_comp "$(dots files)" $cur
 			;;
 		install)
 			COMPREPLY=()
