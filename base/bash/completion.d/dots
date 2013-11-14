@@ -44,7 +44,7 @@ _dots_completions()
 	# Include additional flags for the first word
 	if [[ $COMP_CWORD == 1 ]]
 	then
-		COMPREPLY=( $(compgen -W "${base_cmds[*]} ${base_flags[*]}" -- $cur) )
+		COMPREPLY=( $(compgen -W "${base_cmds[*]} ${base_flags[*]}" -- "$cur") )
 		return
 	fi
 
@@ -58,7 +58,7 @@ _dots_completions()
 	# Perform completion on the base command
 	if [[ $COMP_CWORD == $cmd_index ]]
 	then
-		COMPREPLY=( $(compgen -W "${base_cmds[*]}" -- $cur) )
+		COMPREPLY=( $(compgen -W "${base_cmds[*]}" -- "$cur") )
 		return
 	fi
 
@@ -71,12 +71,12 @@ _dots_completions()
 			# Complete group sub commands
 			if [[ $COMP_CWORD == $cmd2_index ]]
 			then
-				COMPREPLY=( $(compgen -W "known current clear set" -- $cur) )
+				COMPREPLY=( $(compgen -W "known current clear set" -- "$cur") )
 
 			# Complete group set command
 			elif [[ $COMP_CWORD > $cmd2_index && "${COMP_WORDS[$cmd2_index]}" == "set" ]]
 			then
-				__dots_path_comp "$(dots groups known)" $cur
+				__dots_path_comp "$(dots groups known)" "$cur"
 			fi
 			;;
 		diff)
@@ -94,16 +94,16 @@ _dots_completions()
 				# If we were able to load it do completion with common options
 				if [[ -n "$__git_diff_common_options" ]]
 				then
-					COMPREPLY=( $(compgen -W "$__git_diff_common_options" -- $cur) )
+					COMPREPLY=( $(compgen -W "$__git_diff_common_options" -- "$cur") )
 				fi
 
 			# Do config file path completion
 			else
-				__dots_path_comp "$(dots files)" $cur
+				__dots_path_comp "$(dots files)" "$cur"
 			fi
 			;;
 		files)
-			__dots_path_comp "$(dots files)" $cur
+			__dots_path_comp "$(dots files)" "$cur"
 			;;
 		install)
 			# Complete location
@@ -114,11 +114,11 @@ _dots_completions()
 			# Complete location flag
 			elif [[ $cur == -* ]]
 			then
-				COMPREPLY=( $(compgen -W "-l --location" -- $cur) )
+				COMPREPLY=( $(compgen -W "-l --location" -- "$cur") )
 
 			# Complete configuration file paths
 			else
-				__dots_path_comp "$(dots files)" $cur
+				__dots_path_comp "$(dots files)" "$cur"
 			fi
 			;;
 	esac
