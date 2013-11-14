@@ -135,6 +135,9 @@ AP_IDENTIFIER = '!!@@'
 # The file extension used to identify 'overriding' files
 OVERRIDE_EXT = '.override'
 
+# The filename extension to use for after-install scripts
+INSTALL_SCRIPT_EXT = '.install'
+
 # Globally handle exceptions in a clean way
 def handle_exception(exc_type, value, trace):
 	# Normal exception trace in debug mode
@@ -220,6 +223,10 @@ class Configuration(object):
 					# will handle locating this file
 					if file.endswith(OVERRIDE_EXT):
 						file = file[:-len(OVERRIDE_EXT)]
+
+					# Ignore install scripts
+					if file.endswith(INSTALL_SCRIPT_EXT):
+						continue
 
 					files_set.add(os.path.join(root, file))
 
@@ -453,6 +460,20 @@ class ConfigFile(object):
 
 			git_diff(git_args, os.path.join(against, self.path), file.name)
 
+	def exec_install_scripts(self, install_directory):
+		"""Execute all install scripts associated with this configuration
+		file. The execution will happen in the installation directory containing
+		the installed file"""
+		# Locate all installation scripts
+		paths = [os.path.join(SOURCE_DIR, group, self.path) + INSTALL_SCRIPT_EXT
+				for group in self.config.groups]
+
+		# Get the current working directory to execute the script in
+		cwd = os.path.join(install_directory, os.path.dirname(self.path))
+
+		# Execute install scripts that exist
+		for script in [p for p in paths if os.path.exists(p)]:
+			subprocess.Popen(script, cwd=cwd).wait()
 
 	def install(self, to):
 		"""Install this file to a location"""
@@ -480,6 +501,9 @@ class ConfigFile(object):
 
 		# Set the file's mode
 		os.chmod(path, self.mode())
+
+		# Run install scripts
+		self.exec_install_scripts(to)
 
 # Setup the argument parser
 parser = argparse.ArgumentParser(add_help=False)
