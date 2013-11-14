@@ -280,6 +280,22 @@ class ConfigFile(object):
 
 		return file_lines
 
+	@staticmethod
+	def insert_at_ap(file_lines, insert_lines, ap_name=''):
+		"""Insert a list of lines into the file_lines at a given append point.
+		This takes whitespace into account and will add the whitespace infront
+		of all inserted lines"""
+		# Locate the append point line (ignoring whitespace). This will throw an
+		# exception if the append point cannot be found. This should be expected
+		slice_at = map(str.strip, file_lines).index(AP_IDENTIFIER + ap_name)
+		ws = re.match('\s*', file_lines[slice_at]).group()
+
+		# Splice the inserted lines in (including whitespace)
+		del file_lines[slice_at]
+		file_lines[slice_at:1] = [l if l == '\n' else ws + l for l in insert_lines]
+
+		return file_lines
+
 	def __init__(self, relative_path, config):
 		self.path = relative_path
 		self.config = config
@@ -324,8 +340,9 @@ class ConfigFile(object):
 		for path in self.real_paths():
 			with open(path, 'r') as file:
 				for line in file:
+					line = line.strip()
 					if line.startswith(AP_IDENTIFIER):
-						append_points.add(line[len(AP_IDENTIFIER):-1])
+						append_points.add(line[len(AP_IDENTIFIER):])
 
 		return filter(None, append_points)
 
@@ -378,7 +395,7 @@ class ConfigFile(object):
 					contents[-1] += '\n'
 
 				# Ensure the file only has one explicit default append point
-				if contents.count(AP_IDENTIFIER + '\n') > 1:
+				if map(str.strip, contents).count(AP_IDENTIFIER) > 1:
 					raise Exception("More than one explicit append point in {0}".format(path))
 
 				compiling_files.append(contents)
@@ -398,9 +415,7 @@ class ConfigFile(object):
 
 			# Check if we need to slice into the array to insert
 			try:
-				slice_at = compiled.index(AP_IDENTIFIER + '\n')
-				del compiled[slice_at]
-				compiled[slice_at:1] = single_file
+				compiled = self.insert_at_ap(content, single_file)
 			except:
 				compiled += ['\n'] + single_file
 
@@ -412,15 +427,12 @@ class ConfigFile(object):
 			# Replace all instances of this named append point
 			while True:
 				try:
-					slice_at = compiled.index(AP_IDENTIFIER + name + '\n')
+					compiled = self.insert_at_ap(compiled, appending_data, name)
 				except:
 					break
 
-				del compiled[slice_at]
-				compiled[slice_at:1] = appending_data
-
 		# Remove unused append point identifiers
-		compiled = [l for l in compiled if not l.startswith(AP_IDENTIFIER)]
+		compiled = [l for l in compiled if not l.strip().startswith(AP_IDENTIFIER)]
 
 		# Keep the compiled lines for saving to a file later
 		self.compiled = compiled
