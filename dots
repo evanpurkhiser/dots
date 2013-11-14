@@ -198,6 +198,8 @@ class Configuration(object):
 		"""Load groups from the configuration groups file
 		This will complain if one of the groups specified in the file doesn't
 		exist in the source tree (meaning it's considered an 'invalid group'"""
+		if not os.path.exists(self.group_file): return
+
 		with open(self.group_file, 'r') as f:
 			self.groups = f.read().splitlines()
 
