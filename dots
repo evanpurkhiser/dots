@@ -135,6 +135,17 @@ AP_IDENTIFIER = '!!@@'
 # The file extension used to identify 'overriding' files
 OVERRIDE_EXT = '.override'
 
+# Globally handle exceptions in a clean way
+def handle_exception(exc_type, value, trace):
+	# Normal exception trace in debug mode
+	if os.environ.get('DOTS_DEBUG'):
+		return sys.__excepthook__(exc_type, value, trace)
+
+	# print exception message to stderr
+	sys.stderr.write("\033[91m{}\033[0m\n".format(value))
+
+sys.excepthook = handle_exception
+
 # Helper function to execute a git diff process
 def git_diff(git_args, path1, path2):
 	subprocess.call(['git', 'diff', '--diff-filter=MA'] + git_args + [path1, path2])
