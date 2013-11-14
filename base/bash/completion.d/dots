@@ -97,7 +97,7 @@ _dots_completions()
 					COMPREPLY=( $(compgen -W "$__git_diff_common_options" -- $cur) )
 				fi
 
-			# Do file path completion
+			# Do config file path completion
 			else
 				__dots_path_comp "$(dots files)" $cur
 			fi
@@ -106,7 +106,20 @@ _dots_completions()
 			__dots_path_comp "$(dots files)" $cur
 			;;
 		install)
-			COMPREPLY=()
+			# Complete location
+			if [[ "$prev" =~ -l|--location ]]
+			then
+				compopt -o default
+
+			# Complete location flag
+			elif [[ $cur == -* ]]
+			then
+				COMPREPLY=( $(compgen -W "-l --location" -- $cur) )
+
+			# Complete configuration file paths
+			else
+				__dots_path_comp "$(dots files)" $cur
+			fi
 			;;
 	esac
 }
