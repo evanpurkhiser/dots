@@ -125,7 +125,6 @@ help     This help message"""
 # Locate the configuration directory that all source configuration files are
 # stored in. This _should_ be the same directory that this script is located in
 SOURCE_DIR = os.path.dirname(os.path.realpath(__file__))
-os.chdir(SOURCE_DIR)
 
 # Get the location that we will be installing all of the files into
 INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '/.config'))
@@ -150,9 +149,9 @@ class Configuration(object):
 	# Determine which groups are valid by looking at the directory structure of
 	# that the script is installed in. Groups not defined in the
 	# single_directory_groups array will be considered nested groups
-	valid_groups = [g for g in glob.glob('*/*') if not
-			g.startswith(tuple(single_directory_groups))] + \
-			single_directory_groups
+	valid_groups = [g[len(SOURCE_DIR) + 1:] for g in glob.glob(os.path.join(SOURCE_DIR, '*/*'))]
+	valid_groups = [g for g in valid_groups if not g.startswith(tuple(single_directory_groups))]
+	valid_groups += single_directory_groups
 
 	# This is the default groups file that the configuration group listing for
 	# the machine should be stored in
@@ -202,9 +201,10 @@ class Configuration(object):
 		files_set = set()
 
 		for group in self.groups:
-			for root,_, files in os.walk(group):
+			group_path=os.path.join(SOURCE_DIR, group)
+			for root,_, files in os.walk(group_path):
 				# Trim the group name from the directory path
-				root = root[len(group) + 1:]
+				root = root[len(group_path) + 1:]
 
 				for file in files:
 					# Remove the override extension. This will is going to be
