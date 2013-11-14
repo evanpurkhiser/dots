@@ -206,6 +206,12 @@ class Configuration(object):
 	def save_to_file(self):
 		"""This will save the currently defined list of groups for this configuration
 		into the groups file"""
+		directory = os.path.dirname(self.group_file)
+
+		# Ensure the configuration group file directory exists
+		if not os.path.exists(directory):
+			os.makedirs(directory)
+
 		with open(self.group_file, 'w+') as f:
 			f.write('\n'.join(self.groups))
 
