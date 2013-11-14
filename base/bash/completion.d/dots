@@ -62,10 +62,22 @@ _dots_completions()
 		return
 	fi
 
+	# Sub command index
+	local cmd2_index=$(( cmd_index + 1 ))
+
 	# Perform completion for sub-commands
 	case "${COMP_WORDS[$cmd_index]}" in
 		groups)
-			COMPREPLY=()
+			# Complete group sub commands
+			if [[ $COMP_CWORD == $cmd2_index ]]
+			then
+				COMPREPLY=( $(compgen -W "known current clear set" -- $cur) )
+
+			# Complete group set command
+			elif [[ $COMP_CWORD > $cmd2_index && "${COMP_WORDS[$cmd2_index]}" == "set" ]]
+			then
+				__dots_path_comp "$(dots groups known)" $cur
+			fi
 			;;
 		diff)
 			COMPREPLY=()
