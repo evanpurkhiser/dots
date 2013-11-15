@@ -479,9 +479,13 @@ class ConfigFile(object):
 		# Get the current working directory to execute the script in
 		cwd = os.path.join(install_directory, os.path.dirname(self.path))
 
+		# Setup some additiona environment variables for the scripts
+		environ = os.environ
+		environ.update({"DOTS_SOURCE": SOURCE_DIR})
+
 		# Execute install scripts that exist
 		for script in [p for p in paths if os.path.exists(p)]:
-			subprocess.Popen(script, cwd=cwd).wait()
+			subprocess.Popen(script, cwd=cwd, env=environ).wait()
 
 	def install(self, to, exec_install_scripts=False):
 		"""Install this file to a location"""
