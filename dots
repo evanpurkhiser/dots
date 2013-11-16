@@ -59,6 +59,14 @@
 # Fragment files are subject to all of the same logic described above
 # (extending, append points, and even named append points)
 #
+# INSTALLATION SCRIPTS
+#
+# Each configuration file may have an associated .install script. This is a
+# script that will be executed when the configuration file is installed.
+# Remember that configuration files are only installed if they differ from the
+# currently installed configuration file. So install scripts will only be run on
+# updates or first installs of the configuration file.
+#
 # PROGRAM USAGE
 #
 # See USAGE variable
