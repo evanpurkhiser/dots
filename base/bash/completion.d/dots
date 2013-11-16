@@ -41,6 +41,36 @@ __dots_path_comp()
 	done
 }
 
+# Executes a dot command and caches the output. The cache will be invalidated
+# when the source directory has a file modified after the cache date. The cached
+# variable name will be the passed arguments concatenated with underscores and
+# all non alpha-numeric characters replaced with underscores,  then prefixed
+# with '__dots_cache'.
+#
+# Accepts a variable number of arguments
+__dots_cache() {
+	# Get the dots source path
+	local source_path="$(dirname "$(realpath "$(which dots)")")"
+
+	# Get the last updated time of the source config files
+	local last_update="$(find $source_path \
+		-path $source_path/.git -prune -o  \
+		-type f -printf '%T@\n' | sort -n | tail -1)"
+
+	# Get the name of the cached variables
+	local parameters="$@"
+	local variable_name="__dots_cache_${parameters//[^a-zA-Z0-9_]/_}"
+	local cache_ts_name="${variable_name}_ts"
+
+	# Cache the command output if not cached or expired
+	if [[ -z ${!cache_ts_name} || ((${!cache_ts_name} < $last_update)) ]]
+	then
+		# Update the cache and timestamp variables
+		eval "$cache_ts_name=$(date +%s)"
+		eval "$variable_name=\"\$(dots \$parameters)\""
+	fi
+}
+
 _dots_completions()
 {
 	local base_cmds=(groups diff files install help)
@@ -88,7 +118,8 @@ _dots_completions()
 			# Complete group set command
 			elif [[ $COMP_CWORD > $cmd2_index && "${COMP_WORDS[$cmd2_index]}" == "set" ]]
 			then
-				__dots_path_comp "$(dots groups known)" "$cur"
+				__dots_cache groups known
+				__dots_path_comp "$__dots_cache_groups_known" "$cur"
 			fi
 			;;
 		diff)
@@ -111,11 +142,13 @@ _dots_completions()
 
 			# Do config file path completion
 			else
-				__dots_path_comp "$(dots files)" "$cur"
+				__dots_cache files
+				__dots_path_comp "$__dots_cache_files" "$cur"
 			fi
 			;;
 		files)
-			__dots_path_comp "$(dots files)" "$cur"
+			__dots_cache files
+			__dots_path_comp "$__dots_cache_files" "$cur"
 			;;
 		install)
 			# Complete location
@@ -130,7 +163,8 @@ _dots_completions()
 
 			# Complete configuration file paths
 			else
-				__dots_path_comp "$(dots files)" "$cur"
+				__dots_cache files
+				__dots_path_comp "$__dots_cache_files" "$cur"
 			fi
 			;;
 	esac
