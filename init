@@ -42,7 +42,13 @@ __dots_init()
 
 		# Move everything over
 		echo -e "$arrow_good Moving $cloned_dir to $install_dir"
-		rm -fr "$install_dir"
+
+		# We need to create the directory tree but then remove just the install
+		# directory so we can rename the cloned directory as the install
+		# directory. If we don't remove the installed directory the cloned
+		# directory will be placed inside of the install directory.
+		mkdir -p "$install_dir"
+		rm -rf "$install_dir"
 		mv -f  "$cloned_dir" "$install_dir"
 
 		# Get out of the empty directory if we were in it
