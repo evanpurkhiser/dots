@@ -102,7 +102,9 @@ understanding of how the dots management utility works. Here are a few key point
 to keep in mind however:
 
  * Configuration files will be installed into `$XDG_CONFIG_HOME`.
- * Configuration group directories are to be located in `$HOME/.local/etc`
+ * Configuration group directories are to be located in `$HOME/.local/etc`.
+ * It's recomended to clone this repository into `$HOME/.local/lib/dots` but
+   not required.
  * The `dots` script should be made available in your `PATH`.
  * See [Evan Purkhisers personal
    dotfiles](https://github.com/EvanPurkhiser/dots-personal) for an example
