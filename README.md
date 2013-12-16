@@ -122,8 +122,9 @@ your configuration groups, and install the dotfiles themselves
 For example:
 
 ```sh
+$ cd ~
 $ git clone https://github.com/Your/Dotfiles
-$ DOTS_CLONE_DIR=$HOME/Dotfiles
+$ DOTS_CLONE_DIR=~/Dotfiles
 $ source dots/contrib/initialize
 ```
 
