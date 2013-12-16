@@ -9,12 +9,6 @@
 #
 # This script MUST be sourced!
 
-if [[ $_ == $0 ]];
-then
-	echo "Please source me!"
-	exit 1
-fi
-
 __dots_init()
 {
 	local arrow_bad="\033[0;31m==>\033[0m"
@@ -24,7 +18,7 @@ __dots_init()
 	# The installation directory
 	local install_dir="$HOME/.local/etc"
 
-	# The directory that we just (presumably) cloned this into
+	# The directory containing the 
 	local cloned_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 	# The directory where the user keeps his executables
