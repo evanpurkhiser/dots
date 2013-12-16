@@ -69,8 +69,8 @@ machine you access and would like to have your environment configured in a snap.
    Some configuration file formats do not support a way to natively 'include'
    other configuration files into them. The `dots` utility allows for files to
    be inserted into a specific configuration file using a special include
-   syntax. The included file will also follow the cascading file structure
-   previously mentioned.
+   syntax (Known as "explict named append points"). The included file will also
+   follow the cascading file structure previously mentioned.
 
  * **Follows [XDG Base Directory Standard](http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)**  
    The XDG Base Directory Standard specifies that all configuration files should
@@ -103,12 +103,49 @@ to keep in mind however:
 
  * Configuration files will be installed into `$XDG_CONFIG_HOME`.
  * Configuration group directories are to be located in `$HOME/.local/etc`
+ * The `dots` script should be made available in your `PATH`.
  * See [Evan Purkhisers personal
    dotfiles](https://github.com/EvanPurkhiser/dots-personal) for an example
    configuration.
 
 For details on using the `dots` tool itself see the `dots --help` [USAGE
 output](bin/dots#L83).
+
+### The initialization bootstrap script
+
+A [initialization script](contrib/initialize) is included in the `contrib`
+directory, providing an easy way to initalize your dotfiles into the proper
+directory, temporarily setup the `PATH` for the dots, and temporarily source the
+bash completion scripts. This way you can quickly setup your dotfiles, activate
+your configuration groups, and install the dotfiles themselves
+
+For example:
+
+```sh
+$ git clone https://github.com/Your/Dotfiles
+$ DOTS_CLONE_DIR=$HOME/Dotfiles
+$ source dots/contrib/initialize
+```
+
+This will do the following:
+
+ 1. Move the Dotfiles into `$HOME/.local/etc`
+ 2. Symbolically link the dots executable into `$HOME/.local/bin`
+ 3. Add `$HOME/.local/bin` into the `PATH` if it's not already
+ 4. Source the `contrib/bash_completion` script
+
+You can then setup your dotfiles using the `dots` command:
+
+```sh
+$ dots groups set base machines/desktop
+$ dots install
+```
+
+### Bash completion
+
+A bash [completion script](contrib/bash_completion) is inlcuded and provides
+completions for all aspects of the `dots` command. If you would like to take
+advantage of this it's recomended that you source this file in your `bashrc`.
 
 ## Configuration groups
 
