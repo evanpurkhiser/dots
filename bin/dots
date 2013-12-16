@@ -130,12 +130,12 @@ install  Compile and install one or more configuration files into a location.
 
 help     This help message"""
 
-# Locate the configuration directory that all source configuration files are
-# stored in. This _should_ be the same directory that this script is located in
-SOURCE_DIR = os.path.dirname(os.path.realpath(__file__))
-
 # Get the location that we will be installing all of the files into
 INSTALL_DIR = os.getenv('XDG_CONFIG_HOME', os.path.join(os.environ['HOME'], '.config'))
+
+# Locate the configuration directory that all source configuration files are
+# stored in. For now we will install them into $HOME/.local/etc
+SOURCE_DIR = os.path.join(os.environ['HOME'], '.local/etc')
 
 # The named append point identifier in files
 AP_IDENTIFIER = '!!@@'
