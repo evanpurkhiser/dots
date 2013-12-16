@@ -2,10 +2,12 @@
 
 # Initalization script which will do a few things:
 #
-#  1. Move the cloned directory into $HOME/.local/etc
+#  1. Move the cloned dotfiles directory into $HOME/.local/etc
 #  2. Link the dots executable into $HOME/.local/bin
 #  3. Add the $HOME/.local/bin directory to the $PATH if it isn't already
-#  4. Source the base/bash/completion.d/dots completion script
+#  4. Source the dots/contrib/bash_completion script
+#
+# The `DOTS_CLONE_DIR` environment should be set to the
 #
 # This script MUST be sourced!
 
@@ -15,11 +17,20 @@ __dots_init()
 	local arrow_good="\033[0;32m==>\033[0m"
 	local arrow_warn="\033[0;33m==>\033[0m"
 
+	if [[ -z "$DOTS_CLONE_DIR" ]]
+	then
+		echo -e "$arrow_bad \$DOTS_CLONE_DIR must be set to the dots repository being setup"
+		return
+	fi
+
+	# The directory containing the cloned dotfiles to setup
+	local cloned_dir="$DOTS_CLONE_DIR"
+
+	# The dots utility directory
+	local dots_util_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && git rev-parse --show-toplevel)"
+
 	# The installation directory
 	local install_dir="$HOME/.local/etc"
-
-	# The directory containing the 
-	local cloned_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 	# The directory where the user keeps his executables
 	local bin_dir="$HOME/.local/bin"
@@ -37,10 +48,9 @@ __dots_init()
 		# Move everything over
 		echo -e "$arrow_good Moving $cloned_dir to $install_dir"
 
-		# We need to create the directory tree but then remove just the install
-		# directory so we can rename the cloned directory as the install
-		# directory. If we don't remove the installed directory the cloned
-		# directory will be placed inside of the install directory.
+		# 1. Create the directory tree up to the install directory
+		# 2. Remove the empty install_dir base directory so we can move the
+		#    cloned_dir into its place instead of inside of it
 		mkdir -p "$install_dir"
 		rm -rf "$install_dir"
 		mv -f  "$cloned_dir" "$install_dir"
@@ -54,10 +64,10 @@ __dots_init()
 	then
 		echo -e "$arrow_good Linking $install_dir/dots into $bin_dir"
 		mkdir -p "$bin_dir"
-		ln -s "$install_dir/dots" "$bin_dir/"
+		ln -s "$dots_util_dir/bin/dots" "$bin_dir/"
 
 	# If the dots file already exists in bin check if it's not the same
-	elif [[ "$(readlink "$bin_dir/dots")" != "$install_dir/dots" ]]
+	elif [[ "$(readlink "$bin_dir/dots")" != "$dots_util_dir/bin/dots" ]]
 	then
 		echo -e "$arrow_warn $bin_dir/dots already exists!"
 	fi
@@ -73,11 +83,13 @@ __dots_init()
 	if ! type -t __dots_completions | grep -q '^function$' 2>/dev/null
 	then
 		echo -e "$arrow_good Sourcing bash completions for dots"
-		source "$install_dir/base/bash/completion.d/dots"
+		source "$dots_util_dir/contrib/bash_completion"
 	fi
 
 	echo -e "$arrow_good Dot files ready to be installed!"
 }
 
 __dots_init
+
 unset -f __dots_init
+unset DOTS_CLONE_DIR
