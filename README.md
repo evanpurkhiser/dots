@@ -110,6 +110,20 @@ to keep in mind however:
 For details on using the `dots` tool itself see the `dots --help` [USAGE
 output](bin/dots#L83).
 
+## Configuration groups
+
+The primary feature of the dots utility is to allow for dotfiles to be organized
+into different "Configuration groups". These configuration groups can then be
+enabled or disabled for the specific environment that the dotfiles are being
+installed into.
+
+Configuration groups are two-level directories containing configuration files
+and directories that will be installed when the group is activated. The dots
+utility also includes a special configuration group that is hard coded into the
+utility: The `base` group is a single-level directory, so all files and
+directories located in the `base` directory will be installed if the base group
+is activated.
+
 ## Extending and Overriding configurations
 
 Configuration groups can override or extend files that are included in
