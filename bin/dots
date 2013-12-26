@@ -544,10 +544,10 @@ helps   = sub_commands.add_parser('help',    add_help=False)
 # Groups sub commands
 groups_commands = groups.add_subparsers(dest='group_command')
 
-groups_available = groups_commands.add_parser('known', add_help=False)
-groups_current   = groups_commands.add_parser('current',   add_help=False)
-groups_clear     = groups_commands.add_parser('clear',     add_help=False)
-groups_set       = groups_commands.add_parser('set',       add_help=False)
+groups_known   = groups_commands.add_parser('known',   add_help=False)
+groups_current = groups_commands.add_parser('current', add_help=False)
+groups_clear   = groups_commands.add_parser('clear',   add_help=False)
+groups_set     = groups_commands.add_parser('set',     add_help=False)
 
 # Groups-set options
 groups_set.add_argument('group', nargs='+')
