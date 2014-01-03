@@ -104,7 +104,8 @@ to keep in mind however:
  * Configuration files will be installed into `$XDG_CONFIG_HOME`.
  * Configuration group directories are to be located in `$HOME/.local/etc`.
  * It's recomended to clone this repository into `$HOME/.local/lib/dots` but
-   not required.
+   not required. A Arch linux [AUR package is also
+   available](https://aur.archlinux.org/packages/dots-manager/).
  * The `dots` script should be made available in your `PATH`.
  * See [Evan Purkhisers personal
    dotfiles](https://github.com/EvanPurkhiser/dots-personal) for an example
