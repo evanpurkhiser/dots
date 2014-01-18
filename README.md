@@ -112,7 +112,7 @@ to keep in mind however:
    dotfiles](https://github.com/EvanPurkhiser/dots-personal) for an example
    configuration.
 
-For details on using the `dots` tool itself see the `dots --help` [USAGE
+For details on using the `dots` tool itself see the `dots help` [USAGE
 output](bin/dots#L83).
 
 ### The initialization bootstrap script
