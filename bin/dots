@@ -82,6 +82,7 @@ import re
 import tempfile
 import argparse
 import hashlib
+import warnings
 
 USAGE="""dots - A dot file pre-processor and installer
 
@@ -159,6 +160,12 @@ def handle_exception(exc_type, value, trace):
 	sys.stderr.write("\033[91m{}\033[0m\n".format(value))
 
 sys.excepthook = handle_exception
+
+# Globaly handle warnings in a clean way
+def handle_warning(message, category, filename, line):
+	sys.stderr.write("\033[93m{}: {}\033[0m\n".format(category.__name__, message))
+
+warnings.showwarning = handle_warning
 
 # Helper function to execute a git diff process
 def git_diff(git_args, path1, path2):
