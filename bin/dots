@@ -73,7 +73,10 @@
 
 from __future__ import print_function
 
-import sys, os, shutil, subprocess
+import sys
+import os
+import shutil
+import subprocess
 import glob
 import re
 import tempfile
