@@ -202,15 +202,15 @@ class Configuration(object):
 	def groups(self, groups):
 		"""Set the list of groups for this configuration"""
 		# Trim trailing and leading slashes
-		groups = set([x.strip('/') for x in groups])
+		groups = [x.strip('/') for x in groups]
 		
 		# Warn for invalid groups
-		missing_groups = groups.difference(self.valid_groups)
+		missing_groups = set(groups).difference(self.valid_groups)
 
 		if missing_groups:
 			warnings.warn("Configuration group does not exist: {}".format(", ".join(missing_groups)), RuntimeWarning)
 
-		self._groups = list(groups.intersection(self.valid_groups))
+		self._groups = [x for x in groups if x in self.valid_groups]
 		return groups
 
 	def load_from_file(self):
