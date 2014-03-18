@@ -358,7 +358,7 @@ class ConfigFile(object):
 			paths[i] = path + OVERRIDE_EXT
 			paths = paths[i:]
 
-		return [p for p in paths if os.path.exists(p)]
+		return [p for p in paths if os.path.isfile(p)]
 
 	def mode(self):
 		"""Determine the mode of this file. If the file has multiple overriding
