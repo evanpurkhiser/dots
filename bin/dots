@@ -176,7 +176,7 @@ class Configuration(object):
 	# This is a list of groups that are only a single directory deep and do not
 	# contain any groups in sub-directories. The directories in these folders
 	# will be the directories that are installed as configuration files
-	single_directory_groups = ['base'];
+	single_directory_groups = ['base']
 
 	# Determine which groups are valid by looking at the directory structure of
 	# that the script is installed in. Groups not defined in the
@@ -393,7 +393,7 @@ class ConfigFile(object):
 		target_file = ConfigFile(target_path, self.config)
 
 		# The named append point to look for
-		ap_name = match.group(2);
+		ap_name = match.group(2)
 
 		# Check if the target file has the append point
 		return match.group(2) in target_file.named_append_points()
@@ -439,7 +439,7 @@ class ConfigFile(object):
 			self.compiled_file = ""
 			return self
 
-		compiled = compiling_files[0];
+		compiled = compiling_files[0]
 
 		# Handle merging the file_data into one file. This will look for default
 		# Append points, but if it can't find any will default to appending the file
@@ -588,11 +588,11 @@ if args.command == 'groups':
 		config.groups = args.group
 		config.save_to_file()
 	elif args.group_command == 'clear':
-		config.groups = [];
+		config.groups = []
 		config.save_to_file()
 
 elif args.command == 'diff':
-	config.diff_installed(extra_args, args.file);
+	config.diff_installed(extra_args, args.file)
 
 elif args.command == 'files':
 	files = [f.path for f in config.files(args.file)]
