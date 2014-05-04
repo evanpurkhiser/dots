@@ -203,7 +203,7 @@ class Configuration(object):
 		"""Set the list of groups for this configuration"""
 		# Trim trailing and leading slashes
 		groups = [x.strip('/') for x in groups]
-		
+
 		# Warn for invalid groups
 		missing_groups = set(groups).difference(self.valid_groups)
 
