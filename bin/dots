@@ -222,6 +222,9 @@ class Configuration(object):
 		with open(self.group_file, 'r') as f:
 			self.groups = f.read().splitlines()
 
+		if not self.groups:
+			warnings.warn("No configuration groups are currently enabled.", RuntimeWarning)
+
 	def save_to_file(self):
 		"""This will save the currently defined list of groups for this configuration
 		into the groups file"""
