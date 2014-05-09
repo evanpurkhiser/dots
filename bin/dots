@@ -171,6 +171,7 @@ warnings.showwarning = handle_warning
 def git_diff(git_args, path1, path2):
 	subprocess.call(['git', 'diff', '--diff-filter=MA'] + git_args + [path1, path2])
 
+
 class Configuration(object):
 
 	# This is a list of groups that are only a single directory deep and do not
@@ -539,70 +540,74 @@ class ConfigFile(object):
 		# Run install scripts
 		if exec_install_scripts: self.exec_install_scripts(to)
 
-# Setup the argument parser
-parser = argparse.ArgumentParser(add_help=False)
 
-# Handle getting the configuration path
-parser.add_argument('-c', '--config', default=Configuration.default_group_file)
+def setup_argparser():
+	parser = argparse.ArgumentParser(add_help=False)
 
-# Setup the sub-commands
-sub_commands = parser.add_subparsers(dest='command')
+	# Handle getting the configuration path
+	parser.add_argument('-c', '--config', default=Configuration.default_group_file)
 
-# The main sub commands
-groups  = sub_commands.add_parser('groups',  add_help=False)
-diff    = sub_commands.add_parser('diff',    add_help=False)
-files   = sub_commands.add_parser('files',   add_help=False)
-install = sub_commands.add_parser('install', add_help=False)
-helps   = sub_commands.add_parser('help',    add_help=False)
+	# Setup the sub-commands
+	sub_commands = parser.add_subparsers(dest='command')
 
-# Groups sub commands
-groups_commands = groups.add_subparsers(dest='group_command')
+	# The main sub commands
+	groups  = sub_commands.add_parser('groups',  add_help=False)
+	diff    = sub_commands.add_parser('diff',    add_help=False)
+	files   = sub_commands.add_parser('files',   add_help=False)
+	install = sub_commands.add_parser('install', add_help=False)
+	helps   = sub_commands.add_parser('help',    add_help=False)
 
-groups_known   = groups_commands.add_parser('known',   add_help=False)
-groups_current = groups_commands.add_parser('current', add_help=False)
-groups_clear   = groups_commands.add_parser('clear',   add_help=False)
-groups_set     = groups_commands.add_parser('set',     add_help=False)
+	# Groups sub commands
+	groups_commands = groups.add_subparsers(dest='group_command')
 
-# Groups-set options
-groups_set.add_argument('group', nargs='+')
+	groups_known   = groups_commands.add_parser('known',   add_help=False)
+	groups_current = groups_commands.add_parser('current', add_help=False)
+	groups_clear   = groups_commands.add_parser('clear',   add_help=False)
+	groups_set     = groups_commands.add_parser('set',     add_help=False)
 
-# Diff options
-diff.add_argument('file', nargs='*')
+	# Groups-set options
+	groups_set.add_argument('group', nargs='+')
 
-# Files options
-files.add_argument('file', nargs='*')
+	# Diff options
+	diff.add_argument('file', nargs='*')
 
-# Install options
-install.add_argument('-l', '--location', default=INSTALL_DIR)
-install.add_argument('file', nargs='*')
+	# Files options
+	files.add_argument('file', nargs='*')
 
-# Parse arguments!
-args, extra_args = parser.parse_known_args()
+	# Install options
+	install.add_argument('-l', '--location', default=INSTALL_DIR)
+	install.add_argument('file', nargs='*')
 
-config = Configuration(group_file=args.config)
-config.load_from_file()
+	return parser
 
-if args.command == 'groups':
-	if args.group_command == 'known':
-		print('\n'.join(config.valid_groups + ['']), end='')
-	elif args.group_command == 'current':
-		print('\n'.join(config.groups + ['']), end='')
-	elif args.group_command == 'set':
-		config.groups = args.group
-		config.save_to_file()
-	elif args.group_command == 'clear':
-		config.groups = []
-		config.save_to_file()
 
-elif args.command == 'diff':
-	config.diff_installed(extra_args, args.file)
+if __name__ == '__main__':
+	args, extra_args = setup_argparser().parse_known_args()
 
-elif args.command == 'files':
-	files = [f.path for f in config.files(args.file)]
-	for file in sorted(files): print(file)
+	config = Configuration(group_file=args.config)
+	config.load_from_file()
 
-elif args.command == 'install':
-	config.install_tree(args.location, args.file, True)
+	if args.command == 'groups':
+		if args.group_command == 'known':
+			print('\n'.join(config.valid_groups + ['']), end='')
+		elif args.group_command == 'current':
+			print('\n'.join(config.groups + ['']), end='')
+		elif args.group_command == 'set':
+			config.groups = args.group
+			config.save_to_file()
+		elif args.group_command == 'clear':
+			config.groups = []
+			config.save_to_file()
 
-elif args.command == 'help':
-	print(USAGE)
+	elif args.command == 'diff':
+		config.diff_installed(extra_args, args.file)
+
+	elif args.command == 'files':
+		files = [f.path for f in config.files(args.file)]
+		for file in sorted(files): print(file)
+
+	elif args.command == 'install':
+		config.install_tree(args.location, args.file, True)
+
+	elif args.command == 'help':
+		print(USAGE)
