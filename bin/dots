@@ -411,7 +411,7 @@ class ConfigFile(object):
 
 		 2. If the file being merged into includes an explicit append point it
 		    will be merged at that location. Else it will just be appended to
-			the end of the file being merged into.
+		    the end of the file being merged into.
 
 		 3. If the file has named append points then we will look for a fragment
 		    file that matches the append point name, if we can find it it will be
