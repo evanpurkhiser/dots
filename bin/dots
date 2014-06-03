@@ -453,8 +453,8 @@ class ConfigFile(object):
 
 			# Check if we need to slice into the array to insert
 			try:
-				compiled = self.insert_at_ap(content, single_file)
-			except:
+				compiled = self.insert_at_ap(compiled, single_file)
+			except ValueError:
 				compiled += ['\n'] + single_file
 
 		# Handle merging in the named append points
