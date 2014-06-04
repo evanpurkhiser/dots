@@ -86,12 +86,15 @@ import warnings
 
 USAGE="""dots - A dot file pre-processor and installer
 
-dots [-c CONFIG] COMMAND [options]
+dots [-c CONFIG] [-s SOURCE_DIR] COMMAND [options]
 
 The following commands and options are available:
 
 -c       Specify the file to load and save configuration environment groups
          lists to. If not specified the default configuration file will be used
+
+-s       Specify the location of your dotfiles. By default, this is
+         "~/.local/etc".
 
 groups   Manage available configuration groups
 
@@ -179,20 +182,22 @@ class Configuration(object):
 	# will be the directories that are installed as configuration files
 	single_directory_groups = ['base']
 
-	# Determine which groups are valid by looking at the directory structure of
-	# that the script is installed in. Groups not defined in the
-	# single_directory_groups array will be considered nested groups
-	valid_groups = [g[len(SOURCE_DIR) + 1:] for g in glob.glob(os.path.join(SOURCE_DIR, '*/*'))]
-	valid_groups = [g for g in valid_groups if not g.startswith(tuple(single_directory_groups))]
-	valid_groups += single_directory_groups
-
 	# This is the default groups file that the configuration group listing for
 	# the machine should be stored in
 	default_group_file = os.path.join(INSTALL_DIR, 'config-groups')
 
-	def __init__(self, group_file=default_group_file, groups=[]):
+	def __init__(self, group_file=default_group_file, groups=[], source_dir=SOURCE_DIR):
+		# Determine which groups are valid by looking at the directory structure of
+		# that the script is installed in. Groups not defined in the
+		# single_directory_groups array will be considered nested groups
+		valid_groups = [g[len(source_dir) + 1:] for g in glob.glob(os.path.join(source_dir, '*/*'))]
+		valid_groups = [g for g in valid_groups if not g.startswith(tuple(self.single_directory_groups))]
+		valid_groups += self.single_directory_groups
+		self.valid_groups = valid_groups
+		self.source_dir = source_dir
 		self.group_file = group_file
 		self.groups = groups
+
 
 	@property
 	def groups(self):
@@ -243,7 +248,7 @@ class Configuration(object):
 		files_set = set()
 
 		for group in self.groups:
-			group_path=os.path.join(SOURCE_DIR, group)
+			group_path=os.path.join(self.source_dir, group)
 			for root,_, files in os.walk(group_path):
 				# Trim the group name from the directory path
 				root = root[len(group_path) + 1:]
@@ -272,7 +277,7 @@ class Configuration(object):
 				files_set)
 
 		# Get files as ConfigFile objects
-		files = [ConfigFile(file, self) for file in files_set]
+		files = [ConfigFile(file, self, source_dir=self.source_dir) for file in files_set]
 
 		# Don't include named_fragment files
 		return [f for f in files if not f.is_named_fragment()]
@@ -334,10 +339,11 @@ class ConfigFile(object):
 
 		return file_lines
 
-	def __init__(self, relative_path, config):
+	def __init__(self, relative_path, config, source_dir=SOURCE_DIR):
 		self.path = relative_path
 		self.config = config
 		self.compiled = None
+		self.source_dir = source_dir
 
 	def name(self):
 		"""Get the name of the file"""
@@ -349,7 +355,7 @@ class ConfigFile(object):
 
 	def real_paths(self):
 		"""Get the real paths of the source file"""
-		paths = [os.path.join(SOURCE_DIR, group, self.path) for group in self.config.groups]
+		paths = [os.path.join(self.source_dir, group, self.path) for group in self.config.groups]
 
 		# Check for overriding files and remove previous paths accordingly
 		# We must iterate in reverse since the paths list starts at the file in
@@ -394,7 +400,7 @@ class ConfigFile(object):
 
 		# Get the target configuration file
 		target_path = os.path.join(self.directory(), match.group(1))
-		target_file = ConfigFile(target_path, self.config)
+		target_file = ConfigFile(target_path, self.config, source_dir=self.source_dir)
 
 		# The named append point to look for
 		ap_name = match.group(2)
@@ -459,7 +465,7 @@ class ConfigFile(object):
 
 		# Handle merging in the named append points
 		for name in self.named_append_points():
-			appending_file = ConfigFile(self.path + '.' + name, self.config)
+			appending_file = ConfigFile(self.path + '.' + name, self.config, source_dir=self.source_dir)
 			appending_data = appending_file.compile().compiled
 
 			# Replace all instances of this named append point
@@ -496,7 +502,7 @@ class ConfigFile(object):
 		file. The execution will happen in the installation directory containing
 		the installed file"""
 		# Locate all installation scripts
-		paths = [os.path.join(SOURCE_DIR, group, self.path) + INSTALL_SCRIPT_EXT
+		paths = [os.path.join(self.source_dir, group, self.path) + INSTALL_SCRIPT_EXT
 				for group in self.config.groups]
 
 		# Get the current working directory to execute the script in
@@ -504,7 +510,7 @@ class ConfigFile(object):
 
 		# Setup some additiona environment variables for the scripts
 		environ = os.environ
-		environ.update({"DOTS_SOURCE": SOURCE_DIR})
+		environ.update({"DOTS_SOURCE": self.source_dir})
 
 		# Execute install scripts that exist
 		for script in [p for p in paths if os.path.exists(p)]:
@@ -546,6 +552,7 @@ def setup_argparser():
 
 	# Handle getting the configuration path
 	parser.add_argument('-c', '--config', default=Configuration.default_group_file)
+	parser.add_argument('-s', '--source-dir', default=SOURCE_DIR)
 
 	# Setup the sub-commands
 	sub_commands = parser.add_subparsers(dest='command')
@@ -584,7 +591,7 @@ def setup_argparser():
 if __name__ == '__main__':
 	args, extra_args = setup_argparser().parse_known_args()
 
-	config = Configuration(group_file=args.config)
+	config = Configuration(group_file=args.config, source_dir=args.source_dir)
 	config.load_from_file()
 
 	if args.command == 'groups':
