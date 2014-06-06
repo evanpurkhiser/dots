@@ -74,14 +74,21 @@ __dots_cache() {
 _dots_completions()
 {
 	local base_cmds=(groups diff files install help)
-	local base_flags=(-c --config)
+	local base_flags=(-c --config -s --source-dir)
 
 	local cur=${COMP_WORDS[$COMP_CWORD]}
 	local prev=${COMP_WORDS[$COMP_CWORD-1]}
 
 	# Determine the command position
-	local cmd_index=1
-	[[ ${COMP_WORDS[1]} =~ -c|--config ]] && cmd_index=3
+	for ((i=1; $i<=$COMP_CWORD; i++))
+	do
+		if [[ ${COMP_WORDS[i]} != -* && ${COMP_WORDS[i-1]} != -* ]]
+		then
+			cmd="${COMP_WORDS[i]}"
+			cmd_index=${i}
+			break
+		fi
+	done
 
 	# Include additional flags for the first word
 	if [[ $COMP_CWORD == 1 ]]
@@ -90,12 +97,17 @@ _dots_completions()
 		return
 	fi
 
-	# Perform file completion for the config option
-	if [[ $cmd_index > $COMP_CWORD ]]
-	then
-		compopt -o default
-		return
-	fi
+	# Perform file completion for --config and dirname completion for --source-dir
+	case $prev in
+		-c|--config)
+			compopt -o default
+			return
+			;;
+		-s|--source-dir)
+			compopt -o dirnames
+			return
+			;;
+	esac
 
 	# Perform completion on the base command
 	if [[ $COMP_CWORD == $cmd_index ]]
