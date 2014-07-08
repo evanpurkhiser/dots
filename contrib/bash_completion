@@ -49,11 +49,8 @@ __dots_path_comp()
 #
 # Accepts a variable number of arguments
 __dots_cache() {
-	# Get the dots source path
-	local source_path="$(dirname "$(readlink -f "$(which dots)")")"
-
 	# Get the last updated time of the source config files
-	local last_update="$(find $source_path \
+	local last_update="$(find "$HOME/.local/etc" \
 		-path $source_path/.git -prune -o  \
 		-type f -printf '%T@\n' | sort -n | tail -1)"
 
