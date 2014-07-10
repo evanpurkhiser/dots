@@ -50,8 +50,10 @@ __dots_path_comp()
 # Accepts a variable number of arguments
 __dots_cache() {
 	# Get the last updated time of the source config files
-	local last_update="$(find "$HOME/.local/etc" \
-		-path $source_path/.git -prune -o  \
+	local source_path="$HOME/.local/etc"
+
+	local last_update="$(find "$source_path" \
+		-path "$source_path/.git" -prune -o  \
 		-type f -printf '%T@\n' | sort -n | tail -1)"
 
 	# Get the name of the cached variables
