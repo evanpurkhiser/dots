@@ -266,7 +266,7 @@ class Configuration(object):
 			# Create a copy of path_filters as if each is a directory
 			dir_path_filters = [os.path.normpath(p) + os.sep for p in path_filters]
 
-			# Filter out files that aren't
+			# Filter out files that aren't in the files / dirs list
 			files_set = filter(lambda p:
 				p in path_filters or filter(p.startswith, dir_path_filters),
 				files_set)
