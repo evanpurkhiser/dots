@@ -52,9 +52,17 @@ __dots_cache() {
 	# Get the last updated time of the source config files
 	local source_path="$HOME/.local/etc"
 
-	local last_update="$(find "$source_path" \
-		-path "$source_path/.git" -prune -o  \
-		-type f -printf '%T@\n' | sort -n | tail -1)"
+	if [[ "$OSTYPE" == "darwin"* ]]
+	then
+		local last_update="$(find "$source_path" \
+			-path "$source_path/.git" -prune -o  \
+			-type f -exec stat -f'%m' {} + | sort -n | tail -1)"
+
+	else
+		local last_update="$(find "$source_path" \
+			-path "$source_path/.git" -prune -o  \
+			-type f -printf '%T@\n' | sort -n | tail -1)"
+	fi
 
 	# Get the name of the cached variables
 	local parameters="$@"
