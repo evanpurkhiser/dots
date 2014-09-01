@@ -148,9 +148,9 @@ $ dots install
 
 ### Bash completion
 
-A bash [completion script](contrib/bash_completion) is inlcuded and provides
+A bash [completion script](contrib/bash_completion) is included and provides
 completions for all aspects of the `dots` command. If you would like to take
-advantage of this it's recomended that you source this file in your `bashrc`.
+advantage of this it's recommended that you source this file in your `bashrc`.
 
 ## Configuration groups
 
