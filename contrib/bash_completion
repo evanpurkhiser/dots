@@ -7,38 +7,38 @@
 # 2. The current word being completed
 __dots_path_comp()
 {
-	# This forces readline to only display the last item separated by a slash
-	compopt -o filenames
+    # This forces readline to only display the last item separated by a slash
+    compopt -o filenames
 
-	local IFS=$'\n'
-	local k="${#COMPREPLY[@]}"
+    local IFS=$'\n'
+    local k="${#COMPREPLY[@]}"
 
-	for path in $(compgen -W "$1" -- $2)
-	do
-		local trailing_trim
+    for path in $(compgen -W "$1" -- $2)
+    do
+        local trailing_trim
 
-		# Determine what to trim from the end
-		trailing_trim="${path#${2%/*}/}/"
-		trailing_trim="${trailing_trim#*/}"
-		trailing_trim="${trailing_trim%/}"
+        # Determine what to trim from the end
+        trailing_trim="${path#${2%/*}/}/"
+        trailing_trim="${trailing_trim#*/}"
+        trailing_trim="${trailing_trim%/}"
 
-		# Don't add a space if there is more to complete
-		[[ "$trailing_trim" != "" ]] && compopt -o nospace
+        # Don't add a space if there is more to complete
+        [[ "$trailing_trim" != "" ]] && compopt -o nospace
 
-		# Remove the slash if mark-directories is off
-		if ! _rl_enabled mark-directories
-		then
-			# If The current typed path doesnt have a slash in it yet check if
-			# it is the full first portion of a path and ignore everything after
-			# if it is. We don't have to do this once the typed path has a slash
-			# in it as the logic above will pick up on it
-			[[ "$2" != */* && "$path" == ${2}/* ]] && path="$2/$trailing_trim"
+        # Remove the slash if mark-directories is off
+        if ! _rl_enabled mark-directories
+        then
+            # If The current typed path doesnt have a slash in it yet check if
+            # it is the full first portion of a path and ignore everything after
+            # if it is. We don't have to do this once the typed path has a slash
+            # in it as the logic above will pick up on it
+            [[ "$2" != */* && "$path" == ${2}/* ]] && path="$2/$trailing_trim"
 
-			trailing_trim="/$trailing_trim"
-		fi
+            trailing_trim="/$trailing_trim"
+        fi
 
-		COMPREPLY[k++]="${path%%${trailing_trim}}"
-	done
+        COMPREPLY[k++]="${path%%${trailing_trim}}"
+    done
 }
 
 # Executes a dot command and caches the output. The cache will be invalidated
@@ -49,132 +49,132 @@ __dots_path_comp()
 #
 # Accepts a variable number of arguments
 __dots_cache() {
-	# Get the last updated time of the source config files
-	local source_path="$HOME/.local/etc"
+    # Get the last updated time of the source config files
+    local source_path="$HOME/.local/etc"
 
-	if [[ "$OSTYPE" == "darwin"* ]]
-	then
-		local last_update="$(find "$source_path" \
-			-path "$source_path/.git" -prune -o  \
-			-type f -exec stat -f'%m' {} + | sort -n | tail -1)"
+    if [[ "$OSTYPE" == "darwin"* ]]
+    then
+        local last_update="$(find "$source_path" \
+            -path "$source_path/.git" -prune -o  \
+            -type f -exec stat -f'%m' {} + | sort -n | tail -1)"
 
-	else
-		local last_update="$(find "$source_path" \
-			-path "$source_path/.git" -prune -o  \
-			-type f -printf '%T@\n' | sort -n | tail -1)"
-	fi
+    else
+        local last_update="$(find "$source_path" \
+            -path "$source_path/.git" -prune -o  \
+            -type f -printf '%T@\n' | sort -n | tail -1)"
+    fi
 
-	# Get the name of the cached variables
-	local parameters="$@"
-	local variable_name="__dots_cache_${parameters//[^a-zA-Z0-9_]/_}"
-	local cache_ts_name="${variable_name}_ts"
+    # Get the name of the cached variables
+    local parameters="$@"
+    local variable_name="__dots_cache_${parameters//[^a-zA-Z0-9_]/_}"
+    local cache_ts_name="${variable_name}_ts"
 
-	# Cache the command output if not cached or expired
-	if [[ -z ${!cache_ts_name} || ((${!cache_ts_name} < $last_update)) ]]
-	then
-		# Update the cache and timestamp variables
-		eval "$cache_ts_name=$(date +%s)"
-		eval "$variable_name=\"\$(dots \$parameters)\""
-	fi
+    # Cache the command output if not cached or expired
+    if [[ -z ${!cache_ts_name} || ((${!cache_ts_name} < $last_update)) ]]
+    then
+        # Update the cache and timestamp variables
+        eval "$cache_ts_name=$(date +%s)"
+        eval "$variable_name=\"\$(dots \$parameters)\""
+    fi
 }
 
 _dots_completions()
 {
-	local base_cmds=(groups diff files install help)
-	local base_flags=(-c --config)
+    local base_cmds=(groups diff files install help)
+    local base_flags=(-c --config)
 
-	local cur=${COMP_WORDS[$COMP_CWORD]}
-	local prev=${COMP_WORDS[$COMP_CWORD-1]}
+    local cur=${COMP_WORDS[$COMP_CWORD]}
+    local prev=${COMP_WORDS[$COMP_CWORD-1]}
 
-	# Determine the command position
-	local cmd_index=1
-	[[ ${COMP_WORDS[1]} =~ -c|--config ]] && cmd_index=3
+    # Determine the command position
+    local cmd_index=1
+    [[ ${COMP_WORDS[1]} =~ -c|--config ]] && cmd_index=3
 
-	# Include additional flags for the first word
-	if [[ $COMP_CWORD == 1 ]]
-	then
-		COMPREPLY=( $(compgen -W "${base_cmds[*]} ${base_flags[*]}" -- "$cur") )
-		return
-	fi
+    # Include additional flags for the first word
+    if [[ $COMP_CWORD == 1 ]]
+    then
+        COMPREPLY=( $(compgen -W "${base_cmds[*]} ${base_flags[*]}" -- "$cur") )
+        return
+    fi
 
-	# Perform file completion for the config option
-	if [[ $cmd_index > $COMP_CWORD ]]
-	then
-		compopt -o default
-		return
-	fi
+    # Perform file completion for the config option
+    if [[ $cmd_index > $COMP_CWORD ]]
+    then
+        compopt -o default
+        return
+    fi
 
-	# Perform completion on the base command
-	if [[ $COMP_CWORD == $cmd_index ]]
-	then
-		COMPREPLY=( $(compgen -W "${base_cmds[*]}" -- "$cur") )
-		return
-	fi
+    # Perform completion on the base command
+    if [[ $COMP_CWORD == $cmd_index ]]
+    then
+        COMPREPLY=( $(compgen -W "${base_cmds[*]}" -- "$cur") )
+        return
+    fi
 
-	# Sub command index
-	local cmd2_index=$(( cmd_index + 1 ))
+    # Sub command index
+    local cmd2_index=$(( cmd_index + 1 ))
 
-	# Perform completion for sub-commands
-	case "${COMP_WORDS[$cmd_index]}" in
-		groups)
-			# Complete group sub commands
-			if [[ $COMP_CWORD == $cmd2_index ]]
-			then
-				COMPREPLY=( $(compgen -W "known current clear set" -- "$cur") )
+    # Perform completion for sub-commands
+    case "${COMP_WORDS[$cmd_index]}" in
+        groups)
+            # Complete group sub commands
+            if [[ $COMP_CWORD == $cmd2_index ]]
+            then
+                COMPREPLY=( $(compgen -W "known current clear set" -- "$cur") )
 
-			# Complete group set command
-			elif [[ $COMP_CWORD > $cmd2_index && "${COMP_WORDS[$cmd2_index]}" == "set" ]]
-			then
-				__dots_cache groups known
-				__dots_path_comp "$__dots_cache_groups_known" "$cur"
-			fi
-			;;
-		diff)
-			# Do git diff completion
-			if [[ "$cur" == --* ]]
-			then
-				local git_comp_file="/usr/share/bash-completion/completions/git"
+            # Complete group set command
+            elif [[ $COMP_CWORD > $cmd2_index && "${COMP_WORDS[$cmd2_index]}" == "set" ]]
+            then
+                __dots_cache groups known
+                __dots_path_comp "$__dots_cache_groups_known" "$cur"
+            fi
+            ;;
+        diff)
+            # Do git diff completion
+            if [[ "$cur" == --* ]]
+            then
+                local git_comp_file="/usr/share/bash-completion/completions/git"
 
-				# Load in the git completion file if nessicary
-				if [[ -z "$__git_diff_common_options" && -e "$git_comp_file" ]]
-				then
-					source "$git_comp_file"
-				fi
+                # Load in the git completion file if nessicary
+                if [[ -z "$__git_diff_common_options" && -e "$git_comp_file" ]]
+                then
+                    source "$git_comp_file"
+                fi
 
-				# If we were able to load it do completion with common options
-				if [[ -n "$__git_diff_common_options" ]]
-				then
-					COMPREPLY=( $(compgen -W "$__git_diff_common_options" -- "$cur") )
-				fi
+                # If we were able to load it do completion with common options
+                if [[ -n "$__git_diff_common_options" ]]
+                then
+                    COMPREPLY=( $(compgen -W "$__git_diff_common_options" -- "$cur") )
+                fi
 
-			# Do config file path completion
-			else
-				__dots_cache files
-				__dots_path_comp "$__dots_cache_files" "$cur"
-			fi
-			;;
-		files)
-			__dots_cache files
-			__dots_path_comp "$__dots_cache_files" "$cur"
-			;;
-		install)
-			# Complete location
-			if [[ "$prev" =~ -l|--location ]]
-			then
-				compopt -o default
+            # Do config file path completion
+            else
+                __dots_cache files
+                __dots_path_comp "$__dots_cache_files" "$cur"
+            fi
+            ;;
+        files)
+            __dots_cache files
+            __dots_path_comp "$__dots_cache_files" "$cur"
+            ;;
+        install)
+            # Complete location
+            if [[ "$prev" =~ -l|--location ]]
+            then
+                compopt -o default
 
-			# Complete location flag
-			elif [[ $cur == -* ]]
-			then
-				COMPREPLY=( $(compgen -W "-l --location" -- "$cur") )
+            # Complete location flag
+            elif [[ $cur == -* ]]
+            then
+                COMPREPLY=( $(compgen -W "-l --location" -- "$cur") )
 
-			# Complete configuration file paths
-			else
-				__dots_cache files
-				__dots_path_comp "$__dots_cache_files" "$cur"
-			fi
-			;;
-	esac
+            # Complete configuration file paths
+            else
+                __dots_cache files
+                __dots_path_comp "$__dots_cache_files" "$cur"
+            fi
+            ;;
+    esac
 }
 
 complete -F _dots_completions dots
