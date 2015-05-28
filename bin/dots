@@ -103,6 +103,8 @@ groups   Manage available configuration groups
          set      Specify a space separated list of valid configuration groups
                   to enable for this environment
 
+         add      Add a group to the environment
+
          clear    Remove all current groups from the configuration file
 
 diff     Get the difference between the source files, and currently installed
@@ -564,9 +566,11 @@ def setup_argparser():
     groups_current = groups_commands.add_parser('current', add_help=False)
     groups_clear   = groups_commands.add_parser('clear',   add_help=False)
     groups_set     = groups_commands.add_parser('set',     add_help=False)
+    groups_add     = groups_commands.add_parser('add',     add_help=False)
 
     # Groups-set options
     groups_set.add_argument('group', nargs='+')
+    groups_add.add_argument('group', nargs='+')
 
     # Diff options
     diff.add_argument('file', nargs='*')
@@ -594,6 +598,13 @@ if __name__ == '__main__':
             print('\n'.join(config.groups + ['']), end='')
         elif args.group_command == 'set':
             config.groups = args.group
+            config.save_to_file()
+        elif args.group_command == 'add':
+            for group in args.group:
+                if group in config.groups:
+                    warnings.warn("Group {0} is already in current groups. I'll ignore this group!.".format(group), RuntimeWarning)
+                    args.group.remove(group)
+            config.groups = config.groups + args.group
             config.save_to_file()
         elif args.group_command == 'clear':
             config.groups = []
