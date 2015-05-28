@@ -152,462 +152,462 @@ INSTALL_SCRIPT_EXT = '.install'
 
 # Globally handle exceptions in a clean way
 def handle_exception(exc_type, value, trace):
-        # Normal exception trace in debug mode
-        if os.environ.get('DOTS_DEBUG'):
-                return sys.__excepthook__(exc_type, value, trace)
+    # Normal exception trace in debug mode
+    if os.environ.get('DOTS_DEBUG'):
+        return sys.__excepthook__(exc_type, value, trace)
 
-        # print exception message to stderr
-        sys.stderr.write("\033[91m{}\033[0m\n".format(value))
+    # print exception message to stderr
+    sys.stderr.write("\033[91m{}\033[0m\n".format(value))
 
 sys.excepthook = handle_exception
 
 # Globaly handle warnings in a clean way
 def handle_warning(message, category, filename, line):
-        sys.stderr.write("\033[93m{}: {}\033[0m\n".format(category.__name__, message))
+    sys.stderr.write("\033[93m{}: {}\033[0m\n".format(category.__name__, message))
 
 warnings.showwarning = handle_warning
 
 # Helper function to execute a git diff process
 def git_diff(git_args, path1, path2):
-        subprocess.call(['git', 'diff', '--diff-filter=MA'] + git_args + [path1, path2])
+    subprocess.call(['git', 'diff', '--diff-filter=MA'] + git_args + [path1, path2])
 
 
 class Configuration(object):
 
-        # This is a list of groups that are only a single directory deep and do not
-        # contain any groups in sub-directories. The directories in these folders
-        # will be the directories that are installed as configuration files
-        single_directory_groups = ['base']
+    # This is a list of groups that are only a single directory deep and do not
+    # contain any groups in sub-directories. The directories in these folders
+    # will be the directories that are installed as configuration files
+    single_directory_groups = ['base']
 
-        # Determine which groups are valid by looking at the directory structure of
-        # that the script is installed in. Groups not defined in the
-        # single_directory_groups array will be considered nested groups
-        valid_groups = [g[len(SOURCE_DIR) + 1:] for g in glob.glob(os.path.join(SOURCE_DIR, '*/*'))]
-        valid_groups = [g for g in valid_groups if not g.startswith(tuple(single_directory_groups))]
-        valid_groups += single_directory_groups
+    # Determine which groups are valid by looking at the directory structure of
+    # that the script is installed in. Groups not defined in the
+    # single_directory_groups array will be considered nested groups
+    valid_groups = [g[len(SOURCE_DIR) + 1:] for g in glob.glob(os.path.join(SOURCE_DIR, '*/*'))]
+    valid_groups = [g for g in valid_groups if not g.startswith(tuple(single_directory_groups))]
+    valid_groups += single_directory_groups
 
-        # This is the default groups file that the configuration group listing for
-        # the machine should be stored in
-        default_group_file = os.path.join(INSTALL_DIR, 'config-groups')
+    # This is the default groups file that the configuration group listing for
+    # the machine should be stored in
+    default_group_file = os.path.join(INSTALL_DIR, 'config-groups')
 
-        def __init__(self, group_file=default_group_file, groups=[]):
-                self.group_file = group_file
-                self.groups = groups
+    def __init__(self, group_file=default_group_file, groups=[]):
+        self.group_file = group_file
+        self.groups = groups
 
-        @property
-        def groups(self):
-                """Return the list of groups configured for this system"""
-                return self._groups
+    @property
+    def groups(self):
+        """Return the list of groups configured for this system"""
+        return self._groups
 
-        @groups.setter
-        def groups(self, groups):
-                """Set the list of groups for this configuration"""
-                # Trim trailing and leading slashes
-                groups = [x.strip('/') for x in groups]
+    @groups.setter
+    def groups(self, groups):
+        """Set the list of groups for this configuration"""
+        # Trim trailing and leading slashes
+        groups = [x.strip('/') for x in groups]
 
-                # Warn for invalid groups
-                missing_groups = set(groups).difference(self.valid_groups)
+        # Warn for invalid groups
+        missing_groups = set(groups).difference(self.valid_groups)
 
-                if missing_groups:
-                        warnings.warn("Configuration group does not exist: {}".format(", ".join(missing_groups)), RuntimeWarning)
+        if missing_groups:
+            warnings.warn("Configuration group does not exist: {}".format(", ".join(missing_groups)), RuntimeWarning)
 
-                self._groups = [x for x in groups if x in self.valid_groups]
-                return groups
+        self._groups = [x for x in groups if x in self.valid_groups]
+        return groups
 
-        def load_from_file(self):
-                """Load groups from the configuration groups file
-                This will complain if one of the groups specified in the file doesn't
-                exist in the source tree (meaning it's considered an 'invalid group'"""
-                if not os.path.exists(self.group_file): return
+    def load_from_file(self):
+        """Load groups from the configuration groups file
+        This will complain if one of the groups specified in the file doesn't
+        exist in the source tree (meaning it's considered an 'invalid group'"""
+        if not os.path.exists(self.group_file): return
 
-                with open(self.group_file, 'r') as f:
-                        self.groups = f.read().splitlines()
+        with open(self.group_file, 'r') as f:
+            self.groups = f.read().splitlines()
 
-                if not self.groups:
-                        warnings.warn("No configuration groups are currently enabled.", RuntimeWarning)
+        if not self.groups:
+            warnings.warn("No configuration groups are currently enabled.", RuntimeWarning)
 
-        def save_to_file(self):
-                """This will save the currently defined list of groups for this configuration
-                into the groups file"""
-                directory = os.path.dirname(self.group_file)
+    def save_to_file(self):
+        """This will save the currently defined list of groups for this configuration
+        into the groups file"""
+        directory = os.path.dirname(self.group_file)
 
-                # Ensure the configuration group file directory exists
-                if not os.path.exists(directory):
-                        os.makedirs(directory)
+        # Ensure the configuration group file directory exists
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
-                with open(self.group_file, 'w+') as f:
-                        f.write('\n'.join(self.groups))
+        with open(self.group_file, 'w+') as f:
+            f.write('\n'.join(self.groups))
 
-        def files(self, path_filters=None):
-                """Get all configuration file objects that are to be installed"""
-                files_set = set()
+    def files(self, path_filters=None):
+        """Get all configuration file objects that are to be installed"""
+        files_set = set()
 
-                for group in self.groups:
-                        group_path=os.path.join(SOURCE_DIR, group)
-                        for root,_, files in os.walk(group_path):
-                                # Trim the group name from the directory path
-                                root = root[len(group_path) + 1:]
+        for group in self.groups:
+            group_path=os.path.join(SOURCE_DIR, group)
+            for root,_, files in os.walk(group_path):
+                # Trim the group name from the directory path
+                root = root[len(group_path) + 1:]
 
-                                for file in files:
-                                        # Remove the override extension. This will is going to be
-                                        # installed without this extension, ConfigFile.real_paths
-                                        # will handle locating this file
-                                        if file.endswith(OVERRIDE_EXT):
-                                                file = file[:-len(OVERRIDE_EXT)]
+                for file in files:
+                    # Remove the override extension. This will is going to be
+                    # installed without this extension, ConfigFile.real_paths
+                    # will handle locating this file
+                    if file.endswith(OVERRIDE_EXT):
+                        file = file[:-len(OVERRIDE_EXT)]
 
-                                        # Ignore install scripts
-                                        if file.endswith(INSTALL_SCRIPT_EXT):
-                                                continue
+                    # Ignore install scripts
+                    if file.endswith(INSTALL_SCRIPT_EXT):
+                        continue
 
-                                        files_set.add(os.path.join(root, file))
+                    files_set.add(os.path.join(root, file))
 
-                # Filter out files not in the path_filters
-                if path_filters:
-                        # Create a copy of path_filters as if each is a directory
-                        dir_path_filters = [os.path.normpath(p) + os.sep for p in path_filters]
+        # Filter out files not in the path_filters
+        if path_filters:
+            # Create a copy of path_filters as if each is a directory
+            dir_path_filters = [os.path.normpath(p) + os.sep for p in path_filters]
 
-                        # Filter out files that aren't in the files / dirs list
-                        files_set = filter(lambda p:
-                                p in path_filters or filter(p.startswith, dir_path_filters),
-                                files_set)
+            # Filter out files that aren't in the files / dirs list
+            files_set = filter(lambda p:
+                p in path_filters or filter(p.startswith, dir_path_filters),
+                files_set)
 
-                # Get files as ConfigFile objects
-                files = [ConfigFile(file, self) for file in files_set]
+        # Get files as ConfigFile objects
+        files = [ConfigFile(file, self) for file in files_set]
 
-                # Don't include named_fragment files
-                return [f for f in files if not f.is_named_fragment()]
+        # Don't include named_fragment files
+        return [f for f in files if not f.is_named_fragment()]
 
-        def install_tree(self, to=None, path_filters=None, exec_install_scripts=False):
-                """Install the configuration tree into a specific directory"""
-                if not to: to = INSTALL_DIR
+    def install_tree(self, to=None, path_filters=None, exec_install_scripts=False):
+        """Install the configuration tree into a specific directory"""
+        if not to: to = INSTALL_DIR
 
-                # Install all files to the location
-                [f.install(to, exec_install_scripts) for f in self.files(path_filters)]
+        # Install all files to the location
+        [f.install(to, exec_install_scripts) for f in self.files(path_filters)]
 
-        def diff_installed(self, git_args=[], path_filters=None):
-                """Run a diff against the currently installed tree. This uses git as an
-                external command to do the diffing. If a list of file paths are passed
-                in then only those files will be diffed"""
-                temp_dir = tempfile.mkdtemp()
-                self.install_tree(temp_dir, path_filters)
+    def diff_installed(self, git_args=[], path_filters=None):
+        """Run a diff against the currently installed tree. This uses git as an
+        external command to do the diffing. If a list of file paths are passed
+        in then only those files will be diffed"""
+        temp_dir = tempfile.mkdtemp()
+        self.install_tree(temp_dir, path_filters)
 
-                git_diff(git_args, INSTALL_DIR, temp_dir)
-                shutil.rmtree(temp_dir)
+        git_diff(git_args, INSTALL_DIR, temp_dir)
+        shutil.rmtree(temp_dir)
 
 
 class ConfigFile(object):
 
-        @staticmethod
-        def trim_file_whitespace(file_lines):
-                """Remove whiteface elements from the beginning and ends of a list"""
-                for iterator in [enumerate(file_lines), reversed(list(enumerate(file_lines)))]:
-                        for i, line in iterator:
-                                if line.isspace():
-                                        file_lines[i] = None
-                                else: break
+    @staticmethod
+    def trim_file_whitespace(file_lines):
+        """Remove whiteface elements from the beginning and ends of a list"""
+        for iterator in [enumerate(file_lines), reversed(list(enumerate(file_lines)))]:
+            for i, line in iterator:
+                if line.isspace():
+                    file_lines[i] = None
+                else: break
 
-                # Trim front and back empty lines
-                return filter(None, file_lines)
+        # Trim front and back empty lines
+        return filter(None, file_lines)
 
-        @staticmethod
-        def strip_shebang(file_lines):
-                """Removes the shebang from the first line of a list"""
-                if file_lines[0].startswith("#!/"):
-                        del file_lines[0]
-                        file_lines = ConfigFile.trim_file_whitespace(file_lines)
+    @staticmethod
+    def strip_shebang(file_lines):
+        """Removes the shebang from the first line of a list"""
+        if file_lines[0].startswith("#!/"):
+            del file_lines[0]
+            file_lines = ConfigFile.trim_file_whitespace(file_lines)
 
-                return file_lines
+        return file_lines
 
-        @staticmethod
-        def insert_at_ap(file_lines, insert_lines, ap_name=''):
-                """Insert a list of lines into the file_lines at a given append point.
-                This takes whitespace into account and will add the whitespace in front
-                of all inserted lines"""
-                # Locate the append point line (ignoring whitespace). This will throw an
-                # exception if the append point cannot be found. This should be expected
-                slice_at = map(str.strip, file_lines).index(AP_IDENTIFIER + ap_name)
-                ws = re.match('\s*', file_lines[slice_at]).group()
+    @staticmethod
+    def insert_at_ap(file_lines, insert_lines, ap_name=''):
+        """Insert a list of lines into the file_lines at a given append point.
+        This takes whitespace into account and will add the whitespace in front
+        of all inserted lines"""
+        # Locate the append point line (ignoring whitespace). This will throw an
+        # exception if the append point cannot be found. This should be expected
+        slice_at = map(str.strip, file_lines).index(AP_IDENTIFIER + ap_name)
+        ws = re.match('\s*', file_lines[slice_at]).group()
 
-                # Splice the inserted lines in (including whitespace)
-                del file_lines[slice_at]
-                file_lines[slice_at:1] = [l if l == '\n' else ws + l for l in insert_lines]
+        # Splice the inserted lines in (including whitespace)
+        del file_lines[slice_at]
+        file_lines[slice_at:1] = [l if l == '\n' else ws + l for l in insert_lines]
 
-                return file_lines
+        return file_lines
 
-        def __init__(self, relative_path, config):
-                self.path = relative_path
-                self.config = config
-                self.compiled = None
+    def __init__(self, relative_path, config):
+        self.path = relative_path
+        self.config = config
+        self.compiled = None
 
-        def name(self):
-                """Get the name of the file"""
-                return os.path.basename(self.path)
+    def name(self):
+        """Get the name of the file"""
+        return os.path.basename(self.path)
 
-        def directory(self):
-                """Get the directory the file is located in"""
-                return os.path.dirname(self.path)
+    def directory(self):
+        """Get the directory the file is located in"""
+        return os.path.dirname(self.path)
 
-        def real_paths(self):
-                """Get the real paths of the source file"""
-                paths = [os.path.join(SOURCE_DIR, group, self.path) for group in self.config.groups]
+    def real_paths(self):
+        """Get the real paths of the source file"""
+        paths = [os.path.join(SOURCE_DIR, group, self.path) for group in self.config.groups]
 
-                # Check for overriding files and remove previous paths accordingly
-                # We must iterate in reverse since the paths list starts at the file in
-                # the lowest priority group
-                for i, path in reversed(list(enumerate(paths))):
-                        # Skip if there is no overriding file in this group
-                        if not os.path.exists(path + OVERRIDE_EXT): continue
+        # Check for overriding files and remove previous paths accordingly
+        # We must iterate in reverse since the paths list starts at the file in
+        # the lowest priority group
+        for i, path in reversed(list(enumerate(paths))):
+            # Skip if there is no overriding file in this group
+            if not os.path.exists(path + OVERRIDE_EXT): continue
 
-                        # Use the overriding file and ignore all previous paths
-                        paths[i] = path + OVERRIDE_EXT
-                        paths = paths[i:]
+            # Use the overriding file and ignore all previous paths
+            paths[i] = path + OVERRIDE_EXT
+            paths = paths[i:]
 
-                return [p for p in paths if os.path.isfile(p)]
+        return [p for p in paths if os.path.isfile(p)]
 
-        def mode(self):
-                """Determine the mode of this file. If the file has multiple overriding
-                files that don't have matching permissions, then the highest mode will
-                be used"""
-                return max([os.stat(p).st_mode for p in self.real_paths()])
+    def mode(self):
+        """Determine the mode of this file. If the file has multiple overriding
+        files that don't have matching permissions, then the highest mode will
+        be used"""
+        return max([os.stat(p).st_mode for p in self.real_paths()])
 
-        def named_append_points(self):
-                """ Get a list of named append points in this file that will
-                include fragments"""
-                append_points = set()
+    def named_append_points(self):
+        """ Get a list of named append points in this file that will
+        include fragments"""
+        append_points = set()
 
-                for path in self.real_paths():
-                        with open(path, 'r') as file:
-                                for line in file:
-                                        line = line.strip()
-                                        if line.startswith(AP_IDENTIFIER):
-                                                append_points.add(line[len(AP_IDENTIFIER):])
+        for path in self.real_paths():
+            with open(path, 'r') as file:
+                for line in file:
+                    line = line.strip()
+                    if line.startswith(AP_IDENTIFIER):
+                        append_points.add(line[len(AP_IDENTIFIER):])
 
-                return filter(None, append_points)
+        return filter(None, append_points)
 
-        def is_named_fragment(self):
-                """Check if this configuration file is actually a named fragment for
-                another file"""
-                match = re.match('^(.+)\.(.+)$', self.name())
+    def is_named_fragment(self):
+        """Check if this configuration file is actually a named fragment for
+        another file"""
+        match = re.match('^(.+)\.(.+)$', self.name())
 
-                if not match:
-                        return False
+        if not match:
+            return False
 
-                # Get the target configuration file
-                target_path = os.path.join(self.directory(), match.group(1))
-                target_file = ConfigFile(target_path, self.config)
+        # Get the target configuration file
+        target_path = os.path.join(self.directory(), match.group(1))
+        target_file = ConfigFile(target_path, self.config)
 
-                # The named append point to look for
-                ap_name = match.group(2)
+        # The named append point to look for
+        ap_name = match.group(2)
 
-                # Check if the target file has the append point
-                return match.group(2) in target_file.named_append_points()
+        # Check if the target file has the append point
+        return match.group(2) in target_file.named_append_points()
 
-        def compile(self):
-                """Compile this configuration file. This will take each file from the
-                group and merge it based on these rules:
+    def compile(self):
+        """Compile this configuration file. This will take each file from the
+        group and merge it based on these rules:
 
-                 1. Files will be merged down from lowest priority groups (specified
-                    first) to highest priority (specified last)
+         1. Files will be merged down from lowest priority groups (specified
+            first) to highest priority (specified last)
 
-                 2. If the file being merged into includes an explicit append point it
-                    will be merged at that location. Else it will just be appended to
-                    the end of the file being merged into.
+         2. If the file being merged into includes an explicit append point it
+            will be merged at that location. Else it will just be appended to
+            the end of the file being merged into.
 
-                 3. If the file has named append points then we will look for a fragment
-                    file that matches the append point name, if we can find it it will be
-                    merged in."""
-                self.compiled = None
-                compiling_files = []
+         3. If the file has named append points then we will look for a fragment
+            file that matches the append point name, if we can find it it will be
+            merged in."""
+        self.compiled = None
+        compiling_files = []
 
-                # Read all file paths into arrays
-                # This may be memory inefficient and may have to be changed later
-                for path in self.real_paths():
-                        with open(path, 'r') as file:
-                                contents = file.readlines()
+        # Read all file paths into arrays
+        # This may be memory inefficient and may have to be changed later
+        for path in self.real_paths():
+            with open(path, 'r') as file:
+                contents = file.readlines()
 
-                                # Replace front and back empty lines with None
-                                contents = self.trim_file_whitespace(contents)
+                # Replace front and back empty lines with None
+                contents = self.trim_file_whitespace(contents)
 
-                                # Ensure a trailing newline
-                                if contents and not contents[-1].endswith('\n'):
-                                        contents[-1] += '\n'
+                # Ensure a trailing newline
+                if contents and not contents[-1].endswith('\n'):
+                    contents[-1] += '\n'
 
-                                # Ensure the file only has one explicit default append point
-                                if map(str.strip, contents).count(AP_IDENTIFIER) > 1:
-                                        raise Exception("More than one explicit append point in {0}".format(path))
+                # Ensure the file only has one explicit default append point
+                if map(str.strip, contents).count(AP_IDENTIFIER) > 1:
+                    raise Exception("More than one explicit append point in {0}".format(path))
 
-                                compiling_files.append(contents)
+                compiling_files.append(contents)
 
-                # Nothing left to do if there were no files
-                if not compiling_files:
-                        self.compiled_file = ""
-                        return self
+        # Nothing left to do if there were no files
+        if not compiling_files:
+            self.compiled_file = ""
+            return self
 
-                compiled = compiling_files[0]
+        compiled = compiling_files[0]
 
-                # Handle merging the file_data into one file. This will look for default
-                # Append points, but if it can't find any will default to appending the file
-                for single_file in compiling_files[1:]:
-                        # Remove shebang from first line
-                        single_file = self.strip_shebang(single_file)
+        # Handle merging the file_data into one file. This will look for default
+        # Append points, but if it can't find any will default to appending the file
+        for single_file in compiling_files[1:]:
+            # Remove shebang from first line
+            single_file = self.strip_shebang(single_file)
 
-                        # Check if we need to slice into the array to insert
-                        try:
-                                compiled = self.insert_at_ap(compiled, single_file)
-                        except ValueError:
-                                compiled += ['\n'] + single_file
+            # Check if we need to slice into the array to insert
+            try:
+                compiled = self.insert_at_ap(compiled, single_file)
+            except ValueError:
+                compiled += ['\n'] + single_file
 
-                # Handle merging in the named append points
-                for name in self.named_append_points():
-                        appending_file = ConfigFile(self.path + '.' + name, self.config)
-                        appending_data = appending_file.compile().compiled
+        # Handle merging in the named append points
+        for name in self.named_append_points():
+            appending_file = ConfigFile(self.path + '.' + name, self.config)
+            appending_data = appending_file.compile().compiled
 
-                        # Replace all instances of this named append point
-                        while True:
-                                try:
-                                        compiled = self.insert_at_ap(compiled, appending_data, name)
-                                except:
-                                        break
-
-                # Remove unused append point identifiers
-                compiled = [l for l in compiled if not l.strip().startswith(AP_IDENTIFIER)]
-
-                # Keep the compiled lines for saving to a file later
-                self.compiled = compiled
-
-                return self
-
-        def diff(self, git_args=[], against=INSTALL_DIR):
-                """Display a diff of the compiled file contest against the currently
-                installed version of this file. This uses git as an external command to
-                do the diffing"""
-                if not self.compiled: self.compile()
-
-                # Create a named temporary file to allow git to diff
-                with tempfile.NamedTemporaryFile() as file:
-                        for line in self.compiled:
-                                file.write(line)
-                        file.flush()
-
-                        git_diff(git_args, os.path.join(against, self.path), file.name)
-
-        def exec_install_scripts(self, install_directory):
-                """Execute all install scripts associated with this configuration
-                file. The execution will happen in the installation directory containing
-                the installed file"""
-                # Locate all installation scripts
-                paths = [os.path.join(SOURCE_DIR, group, self.path) + INSTALL_SCRIPT_EXT
-                                for group in self.config.groups]
-
-                # Get the current working directory to execute the script in
-                cwd = os.path.join(install_directory, os.path.dirname(self.path))
-
-                # Setup some additiona environment variables for the scripts
-                environ = os.environ
-                environ.update({"DOTS_SOURCE": SOURCE_DIR})
-
-                # Execute install scripts that exist
-                for script in [p for p in paths if os.path.exists(p)]:
-                        subprocess.Popen(script, cwd=cwd, env=environ).wait()
-
-        def install(self, to, exec_install_scripts=False):
-                """Install this file to a location"""
-                if not self.compiled: self.compile()
-
-                # Ensure directory exists for file
-                path = os.path.join(to, self.path)
+            # Replace all instances of this named append point
+            while True:
                 try:
-                        os.makedirs(os.path.dirname(path))
+                    compiled = self.insert_at_ap(compiled, appending_data, name)
                 except:
-                        pass
+                    break
 
-                # Test that the file hasn't changed
-                if os.path.exists(path):
-                        installed = hashlib.md5(open(path).read()).digest()
-                        compiled  = hashlib.md5(''.join(self.compiled)).digest()
+        # Remove unused append point identifiers
+        compiled = [l for l in compiled if not l.strip().startswith(AP_IDENTIFIER)]
 
-                        if installed == compiled and os.stat(path).st_mode == self.mode():
-                                return
+        # Keep the compiled lines for saving to a file later
+        self.compiled = compiled
 
-                # Write the file
-                with open(path, 'wb') as file:
-                        for line in self.compiled:
-                                file.write(line)
+        return self
 
-                # Set the file's mode
-                os.chmod(path, self.mode())
+    def diff(self, git_args=[], against=INSTALL_DIR):
+        """Display a diff of the compiled file contest against the currently
+        installed version of this file. This uses git as an external command to
+        do the diffing"""
+        if not self.compiled: self.compile()
 
-                # Run install scripts
-                if exec_install_scripts: self.exec_install_scripts(to)
+        # Create a named temporary file to allow git to diff
+        with tempfile.NamedTemporaryFile() as file:
+            for line in self.compiled:
+                file.write(line)
+            file.flush()
+
+            git_diff(git_args, os.path.join(against, self.path), file.name)
+
+    def exec_install_scripts(self, install_directory):
+        """Execute all install scripts associated with this configuration
+        file. The execution will happen in the installation directory containing
+        the installed file"""
+        # Locate all installation scripts
+        paths = [os.path.join(SOURCE_DIR, group, self.path) + INSTALL_SCRIPT_EXT
+                for group in self.config.groups]
+
+        # Get the current working directory to execute the script in
+        cwd = os.path.join(install_directory, os.path.dirname(self.path))
+
+        # Setup some additiona environment variables for the scripts
+        environ = os.environ
+        environ.update({"DOTS_SOURCE": SOURCE_DIR})
+
+        # Execute install scripts that exist
+        for script in [p for p in paths if os.path.exists(p)]:
+            subprocess.Popen(script, cwd=cwd, env=environ).wait()
+
+    def install(self, to, exec_install_scripts=False):
+        """Install this file to a location"""
+        if not self.compiled: self.compile()
+
+        # Ensure directory exists for file
+        path = os.path.join(to, self.path)
+        try:
+            os.makedirs(os.path.dirname(path))
+        except:
+            pass
+
+        # Test that the file hasn't changed
+        if os.path.exists(path):
+            installed = hashlib.md5(open(path).read()).digest()
+            compiled  = hashlib.md5(''.join(self.compiled)).digest()
+
+            if installed == compiled and os.stat(path).st_mode == self.mode():
+                return
+
+        # Write the file
+        with open(path, 'wb') as file:
+            for line in self.compiled:
+                file.write(line)
+
+        # Set the file's mode
+        os.chmod(path, self.mode())
+
+        # Run install scripts
+        if exec_install_scripts: self.exec_install_scripts(to)
 
 
 def setup_argparser():
-        parser = argparse.ArgumentParser(add_help=False)
+    parser = argparse.ArgumentParser(add_help=False)
 
-        # Handle getting the configuration path
-        parser.add_argument('-c', '--config', default=Configuration.default_group_file)
+    # Handle getting the configuration path
+    parser.add_argument('-c', '--config', default=Configuration.default_group_file)
 
-        # Setup the sub-commands
-        sub_commands = parser.add_subparsers(dest='command')
+    # Setup the sub-commands
+    sub_commands = parser.add_subparsers(dest='command')
 
-        # The main sub commands
-        groups  = sub_commands.add_parser('groups',  add_help=False)
-        diff    = sub_commands.add_parser('diff',    add_help=False)
-        files   = sub_commands.add_parser('files',   add_help=False)
-        install = sub_commands.add_parser('install', add_help=False)
-        helps   = sub_commands.add_parser('help',    add_help=False)
+    # The main sub commands
+    groups  = sub_commands.add_parser('groups',  add_help=False)
+    diff    = sub_commands.add_parser('diff',    add_help=False)
+    files   = sub_commands.add_parser('files',   add_help=False)
+    install = sub_commands.add_parser('install', add_help=False)
+    helps   = sub_commands.add_parser('help',    add_help=False)
 
-        # Groups sub commands
-        groups_commands = groups.add_subparsers(dest='group_command')
+    # Groups sub commands
+    groups_commands = groups.add_subparsers(dest='group_command')
 
-        groups_known   = groups_commands.add_parser('known',   add_help=False)
-        groups_current = groups_commands.add_parser('current', add_help=False)
-        groups_clear   = groups_commands.add_parser('clear',   add_help=False)
-        groups_set     = groups_commands.add_parser('set',     add_help=False)
+    groups_known   = groups_commands.add_parser('known',   add_help=False)
+    groups_current = groups_commands.add_parser('current', add_help=False)
+    groups_clear   = groups_commands.add_parser('clear',   add_help=False)
+    groups_set     = groups_commands.add_parser('set',     add_help=False)
 
-        # Groups-set options
-        groups_set.add_argument('group', nargs='+')
+    # Groups-set options
+    groups_set.add_argument('group', nargs='+')
 
-        # Diff options
-        diff.add_argument('file', nargs='*')
+    # Diff options
+    diff.add_argument('file', nargs='*')
 
-        # Files options
-        files.add_argument('file', nargs='*')
+    # Files options
+    files.add_argument('file', nargs='*')
 
-        # Install options
-        install.add_argument('-l', '--location', default=INSTALL_DIR)
-        install.add_argument('file', nargs='*')
+    # Install options
+    install.add_argument('-l', '--location', default=INSTALL_DIR)
+    install.add_argument('file', nargs='*')
 
-        return parser
+    return parser
 
 
 if __name__ == '__main__':
-        args, extra_args = setup_argparser().parse_known_args()
+    args, extra_args = setup_argparser().parse_known_args()
 
-        config = Configuration(group_file=args.config)
-        config.load_from_file()
+    config = Configuration(group_file=args.config)
+    config.load_from_file()
 
-        if args.command == 'groups':
-                if args.group_command == 'known':
-                        print('\n'.join(config.valid_groups + ['']), end='')
-                elif args.group_command == 'current':
-                        print('\n'.join(config.groups + ['']), end='')
-                elif args.group_command == 'set':
-                        config.groups = args.group
-                        config.save_to_file()
-                elif args.group_command == 'clear':
-                        config.groups = []
-                        config.save_to_file()
+    if args.command == 'groups':
+        if args.group_command == 'known':
+            print('\n'.join(config.valid_groups + ['']), end='')
+        elif args.group_command == 'current':
+            print('\n'.join(config.groups + ['']), end='')
+        elif args.group_command == 'set':
+            config.groups = args.group
+            config.save_to_file()
+        elif args.group_command == 'clear':
+            config.groups = []
+            config.save_to_file()
 
-        elif args.command == 'diff':
-                config.diff_installed(extra_args, args.file)
+    elif args.command == 'diff':
+        config.diff_installed(extra_args, args.file)
 
-        elif args.command == 'files':
-                files = [f.path for f in config.files(args.file)]
-                for file in sorted(files): print(file)
+    elif args.command == 'files':
+        files = [f.path for f in config.files(args.file)]
+        for file in sorted(files): print(file)
 
-        elif args.command == 'install':
-                config.install_tree(args.location, args.file, True)
+    elif args.command == 'install':
+        config.install_tree(args.location, args.file, True)
 
-        elif args.command == 'help':
-                print(USAGE)
+    elif args.command == 'help':
+        print(USAGE)
