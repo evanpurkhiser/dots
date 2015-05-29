@@ -567,10 +567,12 @@ def setup_argparser():
     groups_clear   = groups_commands.add_parser('clear',   add_help=False)
     groups_set     = groups_commands.add_parser('set',     add_help=False)
     groups_add     = groups_commands.add_parser('add',     add_help=False)
+    groups_del     = groups_commands.add_parser('del',     add_help=False)
 
     # Groups-set options
     groups_set.add_argument('group', nargs='+')
     groups_add.add_argument('group', nargs='+')
+    groups_del.add_argument('group', nargs='+')
 
     # Diff options
     diff.add_argument('file', nargs='*')
@@ -606,6 +608,13 @@ if __name__ == '__main__':
                     args.group.remove(group)
             config.groups = config.groups + args.group
             config.save_to_file()
+        elif args.group_command == 'del':
+            for group in args.group:
+                if group in config.groups:
+                    config.groups.remove(group)
+                else:
+                    warnings.warn("Group {0} wasn't in current groups. I'll ignore this group!".format(group), RuntimeWarning)
+                config.save_to_file()
         elif args.group_command == 'clear':
             config.groups = []
             config.save_to_file()
