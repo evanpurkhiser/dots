@@ -120,13 +120,19 @@ _dots_completions()
             # Complete group sub commands
             if [[ $COMP_CWORD == $cmd2_index ]]
             then
-                COMPREPLY=( $(compgen -W "known current clear set add" -- "$cur") )
+                COMPREPLY=( $(compgen -W "known current clear set add del" -- "$cur") )
 
             # Complete group set command
         elif [[ $COMP_CWORD > $cmd2_index && ( "${COMP_WORDS[$cmd2_index]}" == "set" || "${COMP_WORDS[$cmd2_index]}" == "add" )]]
             then
                 __dots_cache groups known
                 __dots_path_comp "$__dots_cache_groups_known" "$cur"
+
+            # Complete group del command
+        elif [[ $COMP_CWORD > $cmd2_index && "${COMP_WORDS[$cmd2_index]}" == "del" ]]
+            then
+                __dots_cache groups current
+                __dots_path_comp "$__dots_cache_groups_current" "$cur"
             fi
             ;;
         diff)
