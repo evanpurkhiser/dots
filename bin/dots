@@ -103,7 +103,9 @@ groups   Manage available configuration groups
          set      Specify a space separated list of valid configuration groups
                   to enable for this environment
 
-         add      Add a group to the environment
+         add      Add one or more groups to the configuration file
+
+         del      Removes one or more groups from the configuration file
 
          clear    Remove all current groups from the configuration file
 
