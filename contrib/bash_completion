@@ -122,7 +122,7 @@ _dots_completions()
             then
                 COMPREPLY=( $(compgen -W "known current clear set add del" -- "$cur") )
 
-            # Complete group set command
+            # Complete group set and group add command
         elif [[ $COMP_CWORD > $cmd2_index && ( "${COMP_WORDS[$cmd2_index]}" == "set" || "${COMP_WORDS[$cmd2_index]}" == "add" )]]
             then
                 __dots_cache groups known
