@@ -136,6 +136,8 @@ install  Compile and install one or more configuration files into a location.
          -l       Specify the location to install the configuration files to.
                   If omitted the default XDG_CONFIG_HOME path will be used
 
+         -r       Reinstall all config files and execute all install scripts.
+
 help     This help message"""
 
 # Get the location that we will be installing all of the files into
@@ -281,12 +283,12 @@ class Configuration(object):
         # Don't include named_fragment files
         return [f for f in files if not f.is_named_fragment()]
 
-    def install_tree(self, to=None, path_filters=None, exec_install_scripts=False):
+    def install_tree(self, to=None, path_filters=None, exec_install_scripts=False, reinstall=False):
         """Install the configuration tree into a specific directory"""
         if not to: to = INSTALL_DIR
 
         # Install all files to the location
-        [f.install(to, exec_install_scripts) for f in self.files(path_filters)]
+        [f.install(to, exec_install_scripts, reinstall) for f in self.files(path_filters)]
 
     def diff_installed(self, git_args=[], path_filters=None):
         """Run a diff against the currently installed tree. This uses git as an
@@ -514,7 +516,7 @@ class ConfigFile(object):
         for script in [p for p in paths if os.path.exists(p)]:
             subprocess.Popen(script, cwd=cwd, env=environ).wait()
 
-    def install(self, to, exec_install_scripts=False):
+    def install(self, to, exec_install_scripts=False, reinstall=False):
         """Install this file to a location"""
         if not self.compiled: self.compile()
 
@@ -530,7 +532,7 @@ class ConfigFile(object):
             installed = hashlib.md5(open(path).read()).digest()
             compiled  = hashlib.md5(''.join(self.compiled)).digest()
 
-            if installed == compiled and os.stat(path).st_mode == self.mode():
+            if not reinstall and installed == compiled and os.stat(path).st_mode == self.mode():
                 return
 
         # Write the file
@@ -585,6 +587,7 @@ def setup_argparser():
     # Install options
     install.add_argument('-l', '--location', default=INSTALL_DIR)
     install.add_argument('file', nargs='*')
+    install.add_argument('-r', '--reinstall', action='store_true')
 
     return parser
 
@@ -629,7 +632,7 @@ if __name__ == '__main__':
         for file in sorted(files): print(file)
 
     elif args.command == 'install':
-        config.install_tree(args.location, args.file, True)
+        config.install_tree(args.location, args.file, True, args.reinstall)
 
     elif args.command == 'help':
         print(USAGE)
