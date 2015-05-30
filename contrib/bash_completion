@@ -172,7 +172,7 @@ _dots_completions()
             # Complete location flag
             elif [[ $cur == -* ]]
             then
-                COMPREPLY=( $(compgen -W "-l --location" -- "$cur") )
+                COMPREPLY=( $(compgen -W "-l --location -r --reinstal" -- "$cur") )
 
             # Complete configuration file paths
             else
