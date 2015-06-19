@@ -108,6 +108,7 @@ to keep in mind however:
  * A PKGBUILD file is also available for Arch Linux [on the
    AUR](https://aur.archlinux.org/packages/dots-manager/).
  * The `dots` script should be made available in your `PATH`.
+ * The `dots` script should support Python > 2.7 / Python > 3.2.
  * See [Evan Purkhisers personal
    dotfiles](https://github.com/EvanPurkhiser/dots-personal) for an example
    configuration.
