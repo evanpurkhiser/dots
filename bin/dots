@@ -175,7 +175,7 @@ def git_diff(git_args, path1, path2):
 class Configuration(object):
     # This is the default groups file that the configuration group listing for
     # the machine should be stored in
-    default_group_file = os.path.join(INSTALL_DIR, 'dots/config-groups')
+    default_group_file = os.path.join(INSTALL_DIR, 'dots', 'config-groups')
 
     def __init__(self, group_file=default_group_file, groups=[]):
         # This is a list of groups that are only a single directory deep and do not
