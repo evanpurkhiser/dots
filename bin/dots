@@ -518,8 +518,12 @@ class ConfigFile(object):
 
         # Test that the file hasn't changed
         if os.path.exists(path):
-            installed = hashlib.md5(open(path).read()).digest()
-            compiled  = hashlib.md5(''.join(self.compiled)).digest()
+            compiled = ''.join(self.compiled).encode('utf-8')
+            compiled = hashlib.md5(compiled).digest()
+
+            with open(path, 'r', encoding='utf-8') as installed_file:
+                installed = installed_file.read().encode('utf-8')
+                installed = hashlib.md5(installed).digest()
 
             if installed == compiled and os.stat(path).st_mode == self.mode():
                 return
