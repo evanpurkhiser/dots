@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 #
 # dots - A cascading dot file management tool
 #
@@ -179,24 +179,23 @@ def git_diff(git_args, path1, path2):
 
 
 class Configuration(object):
-
-    # This is a list of groups that are only a single directory deep and do not
-    # contain any groups in sub-directories. The directories in these folders
-    # will be the directories that are installed as configuration files
-    single_directory_groups = ['base']
-
-    # Determine which groups are valid by looking at the directory structure of
-    # that the script is installed in. Groups not defined in the
-    # single_directory_groups array will be considered nested groups
-    valid_groups = [g[len(SOURCE_DIR) + 1:] for g in glob.glob(os.path.join(SOURCE_DIR, '*/*'))]
-    valid_groups = [g for g in valid_groups if not g.startswith(tuple(single_directory_groups))]
-    valid_groups += single_directory_groups
-
     # This is the default groups file that the configuration group listing for
     # the machine should be stored in
-    default_group_file = os.path.join(INSTALL_DIR, 'config-groups')
+    default_group_file = os.path.join(INSTALL_DIR, 'dots', 'config-groups')
 
     def __init__(self, group_file=default_group_file, groups=[]):
+        # This is a list of groups that are only a single directory deep and do not
+        # contain any groups in sub-directories. The directories in these folders
+        # will be the directories that are installed as configuration files
+        single_directory_groups = ['base']
+
+        # Determine which groups are valid by looking at the directory structure of
+        # that the script is installed in. Groups not defined in the
+        # single_directory_groups array will be considered nested groups
+        valid_groups = [g[len(SOURCE_DIR) + 1:] for g in glob.glob(os.path.join(SOURCE_DIR, '*/*'))]
+        valid_groups = [g for g in valid_groups if not g.startswith(tuple(single_directory_groups))]
+        self.valid_groups = valid_groups + single_directory_groups
+
         self.group_file = group_file
         self.groups = groups
 
@@ -274,7 +273,7 @@ class Configuration(object):
 
             # Filter out files that aren't in the files / dirs list
             files_set = filter(lambda p:
-                p in path_filters or filter(p.startswith, dir_path_filters),
+                p in path_filters or list(filter(p.startswith, dir_path_filters)),
                 files_set)
 
         # Get files as ConfigFile objects
@@ -313,7 +312,7 @@ class ConfigFile(object):
                 else: break
 
         # Trim front and back empty lines
-        return filter(None, file_lines)
+        return [f for f in file_lines if f]
 
     @staticmethod
     def strip_shebang(file_lines):
@@ -331,7 +330,7 @@ class ConfigFile(object):
         of all inserted lines"""
         # Locate the append point line (ignoring whitespace). This will throw an
         # exception if the append point cannot be found. This should be expected
-        slice_at = map(str.strip, file_lines).index(AP_IDENTIFIER + ap_name)
+        slice_at = [l.strip() for l in file_lines].index(AP_IDENTIFIER + ap_name)
         ws = re.match('\s*', file_lines[slice_at]).group()
 
         # Splice the inserted lines in (including whitespace)
@@ -439,7 +438,7 @@ class ConfigFile(object):
                     contents[-1] += '\n'
 
                 # Ensure the file only has one explicit default append point
-                if map(str.strip, contents).count(AP_IDENTIFIER) > 1:
+                if [p.strip() for p in contents].count(AP_IDENTIFIER) > 1:
                     raise Exception("More than one explicit append point in {0}".format(path))
 
                 compiling_files.append(contents)
@@ -476,10 +475,7 @@ class ConfigFile(object):
                     break
 
         # Remove unused append point identifiers
-        compiled = [l for l in compiled if not l.strip().startswith(AP_IDENTIFIER)]
-
-        # Keep the compiled lines for saving to a file later
-        self.compiled = compiled
+        self.compiled = [l for l in compiled if not l.strip().startswith(AP_IDENTIFIER)]
 
         return self
 
@@ -487,12 +483,11 @@ class ConfigFile(object):
         """Display a diff of the compiled file contest against the currently
         installed version of this file. This uses git as an external command to
         do the diffing"""
-        if not self.compiled: self.compile()
+        if self.compiled is None: self.compile()
 
         # Create a named temporary file to allow git to diff
-        with tempfile.NamedTemporaryFile() as file:
-            for line in self.compiled:
-                file.write(line)
+        with tempfile.NamedTemporaryFile('w+') as file:
+            file.writelines(self.compiled)
             file.flush()
 
             git_diff(git_args, os.path.join(against, self.path), file.name)
@@ -536,9 +531,8 @@ class ConfigFile(object):
                 return
 
         # Write the file
-        with open(path, 'wb') as file:
-            for line in self.compiled:
-                file.write(line)
+        with open(path, 'w') as file:
+            file.writelines(self.compiled)
 
         # Set the file's mode
         os.chmod(path, self.mode())
@@ -555,6 +549,7 @@ def setup_argparser():
 
     # Setup the sub-commands
     sub_commands = parser.add_subparsers(dest='command')
+    sub_commands.required = True
 
     # The main sub commands
     groups  = sub_commands.add_parser('groups',  add_help=False)
