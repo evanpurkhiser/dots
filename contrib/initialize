@@ -13,80 +13,80 @@
 
 __dots_init()
 {
-	local arrow_bad="\033[0;31m==>\033[0m"
-	local arrow_good="\033[0;32m==>\033[0m"
-	local arrow_warn="\033[0;33m==>\033[0m"
+    local arrow_bad="\033[0;31m==>\033[0m"
+    local arrow_good="\033[0;32m==>\033[0m"
+    local arrow_warn="\033[0;33m==>\033[0m"
 
-	if [[ -z "$DOTS_CLONE_DIR" ]]
-	then
-		echo -e "$arrow_bad \$DOTS_CLONE_DIR must be set to the dots repository being setup"
-		return
-	fi
+    if [[ -z "$DOTS_CLONE_DIR" ]]
+    then
+        echo -e "$arrow_bad \$DOTS_CLONE_DIR must be set to the dots repository being setup"
+        return
+    fi
 
-	# The directory containing the cloned dotfiles to setup
-	local cloned_dir="$DOTS_CLONE_DIR"
+    # The directory containing the cloned dotfiles to setup
+    local cloned_dir="$DOTS_CLONE_DIR"
 
-	# The dots utility directory
-	local dots_util_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && git rev-parse --show-toplevel)"
+    # The dots utility directory
+    local dots_util_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && git rev-parse --show-toplevel)"
 
-	# The installation directory
-	local install_dir="$HOME/.local/etc"
+    # The installation directory
+    local install_dir="$HOME/.local/etc"
 
-	# The directory where the user keeps his executables
-	local bin_dir="$HOME/.local/bin"
+    # The directory where the user keeps his executables
+    local bin_dir="$HOME/.local/bin"
 
-	# 1. Move everything into the install directory if we need to
-	if [[ "$install_dir" != "$cloned_dir" ]]
-	then
-		# Make sure the installation directory isn't in use
-		if [ -e "$install_dir" ] && ! find "$install_dir" -maxdepth 0 -empty | read v
-		then
-			echo -e "$arrow_bad $install_dir directory not empty"
-			return
-		fi
+    # 1. Move everything into the install directory if we need to
+    if [[ "$install_dir" != "$cloned_dir" ]]
+    then
+        # Make sure the installation directory isn't in use
+        if [ -e "$install_dir" ] && ! find "$install_dir" -maxdepth 0 -empty | read v
+        then
+            echo -e "$arrow_bad $install_dir directory not empty"
+            return
+        fi
 
-		# Move everything over
-		echo -e "$arrow_good Moving $cloned_dir to $install_dir"
+        # Move everything over
+        echo -e "$arrow_good Moving $cloned_dir to $install_dir"
 
-		# 1. Create the directory tree up to the install directory
-		# 2. Remove the empty install_dir base directory so we can move the
-		#    cloned_dir into its place instead of inside of it
-		mkdir -p "$install_dir"
-		rm -rf "$install_dir"
-		mv -f  "$cloned_dir" "$install_dir"
+        # 1. Create the directory tree up to the install directory
+        # 2. Remove the empty install_dir base directory so we can move the
+        #    cloned_dir into its place instead of inside of it
+        mkdir -p "$install_dir"
+        rm -rf "$install_dir"
+        mv -f  "$cloned_dir" "$install_dir"
 
-		# Get out of the empty directory if we were in it
-		[[ "$(pwd)" == "$cloned_dir" ]] && cd
-	fi
+        # Get out of the empty directory if we were in it
+        [[ "$(pwd)" == "$cloned_dir" ]] && cd
+    fi
 
-	# 2. Link the dots script into the users local bin
-	if [[ ! -e "$bin_dir/dots" ]]
-	then
-		echo -e "$arrow_good Linking $install_dir/dots into $bin_dir"
-		mkdir -p "$bin_dir"
-		ln -s "$dots_util_dir/bin/dots" "$bin_dir/"
+    # 2. Link the dots script into the users local bin
+    if [[ ! -e "$bin_dir/dots" ]]
+    then
+        echo -e "$arrow_good Linking $install_dir/dots into $bin_dir"
+        mkdir -p "$bin_dir"
+        ln -s "$dots_util_dir/bin/dots" "$bin_dir/"
 
-	# If the dots file already exists in bin check if it's not the same
-	elif [[ "$(readlink "$bin_dir/dots")" != "$dots_util_dir/bin/dots" ]]
-	then
-		echo -e "$arrow_warn $bin_dir/dots already exists!"
-	fi
+    # If the dots file already exists in bin check if it's not the same
+    elif [[ "$(readlink "$bin_dir/dots")" != "$dots_util_dir/bin/dots" ]]
+    then
+        echo -e "$arrow_warn $bin_dir/dots already exists!"
+    fi
 
-	# 3. Add the bin directory to the front of the path
-	if [[ ":$PATH:" != *":$bin_dir:"* ]]
-	then
-		echo -e "$arrow_good Temporarily adding $bin_dir to your PATH"
-		PATH="$HOME/.local/bin:$PATH"
-	fi
+    # 3. Add the bin directory to the front of the path
+    if [[ ":$PATH:" != *":$bin_dir:"* ]]
+    then
+        echo -e "$arrow_good Temporarily adding $bin_dir to your PATH"
+        PATH="$HOME/.local/bin:$PATH"
+    fi
 
-	# 4. Source in the dots completion
-	if ! type -t __dots_completions | grep -q '^function$' 2>/dev/null
-	then
-		echo -e "$arrow_good Sourcing bash completions for dots"
-		source "$dots_util_dir/contrib/bash_completion"
-	fi
+    # 4. Source in the dots completion
+    if ! type -t __dots_completions | grep -q '^function$' 2>/dev/null
+    then
+        echo -e "$arrow_good Sourcing bash completions for dots"
+        source "$dots_util_dir/contrib/bash_completion"
+    fi
 
-	echo -e "$arrow_good Dot files ready to be installed!"
+    echo -e "$arrow_good Dot files ready to be installed!"
 }
 
 __dots_init
