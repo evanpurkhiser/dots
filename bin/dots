@@ -75,6 +75,7 @@ from __future__ import print_function
 
 import sys
 import os
+import io
 import shutil
 import subprocess
 import glob
@@ -219,7 +220,7 @@ class Configuration(object):
         exist in the source tree (meaning it's considered an 'invalid group'"""
         if not os.path.exists(self.group_file): return
 
-        with open(self.group_file, 'r') as f:
+        with io.open(self.group_file, 'r') as f:
             self.groups = f.read().splitlines()
 
         if not self.groups:
@@ -234,7 +235,7 @@ class Configuration(object):
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        with open(self.group_file, 'w+') as f:
+        with io.open(self.group_file, 'w+') as f:
             f.write('\n'.join(self.groups))
 
     def files(self, path_filters=None):
@@ -375,7 +376,7 @@ class ConfigFile(object):
         append_points = set()
 
         for path in self.real_paths():
-            with open(path, 'r') as file:
+            with io.open(path, 'r') as file:
                 for line in file:
                     line = line.strip()
                     if line.startswith(AP_IDENTIFIER):
@@ -421,7 +422,7 @@ class ConfigFile(object):
         # Read all file paths into arrays
         # This may be memory inefficient and may have to be changed later
         for path in self.real_paths():
-            with open(path, 'r') as file:
+            with io.open(path, 'r') as file:
                 contents = file.readlines()
 
                 # Replace front and back empty lines with None
@@ -521,7 +522,7 @@ class ConfigFile(object):
             compiled = ''.join(self.compiled).encode('utf-8')
             compiled = hashlib.md5(compiled).digest()
 
-            with open(path, 'r', encoding='utf-8') as installed_file:
+            with io.open(path, 'r', encoding='utf-8') as installed_file:
                 installed = installed_file.read().encode('utf-8')
                 installed = hashlib.md5(installed).digest()
 
@@ -529,7 +530,7 @@ class ConfigFile(object):
                 return
 
         # Write the file
-        with open(path, 'w') as file:
+        with io.open(path, 'w') as file:
             file.writelines(self.compiled)
 
         # Set the file's mode
