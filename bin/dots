@@ -312,7 +312,7 @@ class ConfigFile(object):
     @staticmethod
     def strip_shebang(file_lines):
         """Removes the shebang from the first line of a list"""
-        if file_lines[0].startswith("#!/"):
+        if file_lines and file_lines[0].startswith("#!/"):
             del file_lines[0]
             file_lines = ConfigFile.trim_file_whitespace(file_lines)
 
