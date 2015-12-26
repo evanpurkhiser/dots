@@ -73,6 +73,7 @@
 
 from __future__ import print_function
 
+import codecs
 import sys
 import os
 import io
@@ -338,6 +339,7 @@ class ConfigFile(object):
         self.path = relative_path
         self.config = config
         self.compiled = None
+        self.compiled_binary = None
 
     def name(self):
         """Get the name of the file"""
@@ -419,22 +421,30 @@ class ConfigFile(object):
         self.compiled = None
         compiling_files = []
 
+        binary = False
+
         # Read all file paths into arrays
         # This may be memory inefficient and may have to be changed later
         for path in self.real_paths():
-            with io.open(path, 'r') as file:
-                contents = file.readlines()
+            with io.open(path, 'rb') as file:
+                contents_binary = file.read()
+                try:
+                    contents = codecs.decode(contents_binary, 'utf-8').splitlines()
+                except UnicodeDecodeError:
+                    binary = True
+                    contents = ["<binary file: %s>\n" % path]
 
-                # Replace front and back empty lines with None
-                contents = self.trim_file_whitespace(contents)
+                if not binary:
+                    # Replace front and back empty lines with None
+                    contents = self.trim_file_whitespace(contents)
 
-                # Ensure a trailing newline
-                if contents and not contents[-1].endswith('\n'):
-                    contents[-1] += '\n'
+                    # Ensure a trailing newline
+                    if contents and not contents[-1].endswith('\n'):
+                        contents[-1] += '\n'
 
-                # Ensure the file only has one explicit default append point
-                if [p.strip() for p in contents].count(AP_IDENTIFIER) > 1:
-                    raise Exception("More than one explicit append point in {0}".format(path))
+                    # Ensure the file only has one explicit default append point
+                    if [p.strip() for p in contents].count(AP_IDENTIFIER) > 1:
+                        raise Exception("More than one explicit append point in {0}".format(path))
 
                 compiling_files.append(contents)
 
@@ -443,34 +453,41 @@ class ConfigFile(object):
             self.compiled_file = ""
             return self
 
-        compiled = compiling_files[0]
 
-        # Handle merging the file_data into one file. This will look for default
-        # Append points, but if it can't find any will default to appending the file
-        for single_file in compiling_files[1:]:
-            # Remove shebang from first line
-            single_file = self.strip_shebang(single_file)
+        # Handle merging the files into one file.
+        if binary:
+            # For binary files, just use the last one.
+            self.compiled = ''.join(contents)
+            self.compiled_binary = contents_binary
+        else:
+            compiled = compiling_files[0]
+            # This will look for default Append points, but if it can't find any
+            # will default to appending the file
+            for single_file in compiling_files[1:]:
+                # Remove shebang from first line
+                single_file = self.strip_shebang(single_file)
 
-            # Check if we need to slice into the array to insert
-            try:
-                compiled = self.insert_at_ap(compiled, single_file)
-            except ValueError:
-                compiled += ['\n'] + single_file
-
-        # Handle merging in the named append points
-        for name in self.named_append_points():
-            appending_file = ConfigFile(self.path + '.' + name, self.config)
-            appending_data = appending_file.compile().compiled
-
-            # Replace all instances of this named append point
-            while True:
+                # Check if we need to slice into the array to insert
                 try:
-                    compiled = self.insert_at_ap(compiled, appending_data, name)
-                except:
-                    break
+                    compiled = self.insert_at_ap(compiled, single_file)
+                except ValueError:
+                    compiled += ['\n'] + single_file
 
-        # Remove unused append point identifiers
-        self.compiled = [l for l in compiled if not l.strip().startswith(AP_IDENTIFIER)]
+            # Handle merging in the named append points
+            for name in self.named_append_points():
+                appending_file = ConfigFile(self.path + '.' + name, self.config)
+                appending_data = appending_file.compile().compiled
+
+                # Replace all instances of this named append point
+                while True:
+                    try:
+                        compiled = self.insert_at_ap(compiled, appending_data, name)
+                    except:
+                        break
+
+            # Remove unused append point identifiers
+            self.compiled = [l for l in compiled if not l.strip().startswith(AP_IDENTIFIER)]
+            self.compiled_binary = '\n'.join(self.compiled).encode('utf-8')
 
         return self
 
@@ -478,11 +495,11 @@ class ConfigFile(object):
         """Display a diff of the compiled file contest against the currently
         installed version of this file. This uses git as an external command to
         do the diffing"""
-        if self.compiled is None: self.compile()
+        if self.compiled_binary is None: self.compile()
 
         # Create a named temporary file to allow git to diff
-        with tempfile.NamedTemporaryFile('w+') as file:
-            file.writelines(self.compiled)
+        with tempfile.NamedTemporaryFile('wb+') as file:
+            file.write(self.compiled_binary)
             file.flush()
 
             git_diff(git_args, os.path.join(against, self.path), file.name)
@@ -508,7 +525,7 @@ class ConfigFile(object):
 
     def install(self, to, exec_install_scripts=False):
         """Install this file to a location"""
-        if not self.compiled: self.compile()
+        if not self.compiled_binary: self.compile()
 
         # Ensure directory exists for file
         path = os.path.join(to, self.path)
@@ -519,19 +536,17 @@ class ConfigFile(object):
 
         # Test that the file hasn't changed
         if os.path.exists(path):
-            compiled = ''.join(self.compiled).encode('utf-8')
-            compiled = hashlib.md5(compiled).digest()
+            compiled_hash = hashlib.md5(self.compiled_binary).digest()
 
-            with io.open(path, 'r', encoding='utf-8') as installed_file:
-                installed = installed_file.read().encode('utf-8')
-                installed = hashlib.md5(installed).digest()
+            with io.open(path, 'rb') as installed_file:
+                installed_hash = hashlib.md5(installed_file.read()).digest()
 
-            if installed == compiled and os.stat(path).st_mode == self.mode():
+            if installed_hash == compiled_hash and os.stat(path).st_mode == self.mode():
                 return
 
         # Write the file
-        with io.open(path, 'w') as file:
-            file.writelines(self.compiled)
+        with io.open(path, 'wb') as file:
+            file.write(self.compiled_binary)
 
         # Set the file's mode
         os.chmod(path, self.mode())
