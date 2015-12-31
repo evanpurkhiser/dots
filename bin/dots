@@ -377,8 +377,16 @@ class ConfigFile(object):
         append_points = set()
 
         for path in self.real_paths():
-            with open(path, 'r') as file:
-                for line in file:
+            with open(path, 'rb') as file:
+                contents_binary = file.read()
+
+                try:
+                    contents = codecs.decode(contents_binary, 'utf-8').splitlines(True)
+                except UnicodeDecodeError:
+                    # Ignore files we can't decode.
+                    continue
+
+                for line in contents:
                     line = line.strip()
                     if line.startswith(AP_IDENTIFIER):
                         append_points.add(line[len(AP_IDENTIFIER):])
