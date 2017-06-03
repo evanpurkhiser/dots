@@ -15,6 +15,20 @@ const defaultConfigPath = "${HOME}/.local/etc/config.yml"
 // override the location of the source config file.
 const sourceConfigEnv = "DOTS_CONFIG"
 
+// Profiles specifies the mapping of profile names to a list of group names
+type Profiles map[string][]string
+
+// Names returns a list of configured profiles
+func (p Profiles) Names() []string {
+	names := []string{}
+
+	for name := range p {
+		names = append(names, name)
+	}
+
+	return names
+}
+
 // SourceConfig specifies the structure of the source dotfile configuration.
 type SourceConfig struct {
 	// SourcePath specifies where the source configuration files live. If left
@@ -41,7 +55,7 @@ type SourceConfig struct {
 
 	// Profiles is a mapping of profile names to a list of groups to install.
 	// Base groups do not need to be specified.
-	Profiles map[string][]string `json:"profiles"`
+	Profiles Profiles `json:"profiles"`
 
 	// ExpandEnvironment specifies a list of install file paths that when
 	// installed should have bash style parameter expansion done for
