@@ -3,6 +3,7 @@ package resolver
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -29,11 +30,13 @@ type Configurations map[string]*ConfigFile
 
 // Files gets the list of all configuration files.
 func (c Configurations) Files() []string {
-	files := make([]string, len(c))
+	files := []string{}
 
 	for path := range c {
 		files = append(files, path)
 	}
+
+	sort.Strings(files)
 
 	return files
 }
