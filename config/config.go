@@ -1,8 +1,10 @@
 package config
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
@@ -38,6 +40,10 @@ type SourceConfig struct {
 	// InstallPath specifies where configuration files should be installed
 	InstallPath string `yaml:"install_path"`
 
+	// LockfilePath specifies where the dots lockfile should be installed. If
+	// left blank it will be installed into ${install_path}/dots/lockfile.json
+	LockfilePath string `yaml:"lockfile_path"`
+
 	// OverrideSuffix specifies the file suffix to mark a configuration file as
 	// overriding all files lower in the cascade.
 	OverrideSuffix string `yaml:"override_suffix"`
@@ -65,9 +71,9 @@ type SourceConfig struct {
 	ExpandEnvironment []string `yaml:"expand_environment"`
 }
 
-// SourceLockFile specifies the structure of the lockfile that is installed
+// SourceLockfile specifies the structure of the lockfile that is installed
 // along side configuration files.
-type SourceLockFile struct {
+type SourceLockfile struct {
 	// Profile specifies the currently configured profile
 	Profile string `json:"profile"`
 
@@ -89,11 +95,11 @@ func SourceConfigPath() string {
 }
 
 // LoadSourceConfig reads and unmarshals the yaml source configuration file
-// into the SourceConfig struct.
-func LoadSourceConfig(path string) (*SourceConfig, error) {
+// into the SourceConfig.
+func LoadSourceConfig(configPath string) (*SourceConfig, error) {
 	config := &SourceConfig{}
 
-	data, err := ioutil.ReadFile(path)
+	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -104,12 +110,52 @@ func LoadSourceConfig(path string) (*SourceConfig, error) {
 
 	// Determine the source path if not configured
 	if config.SourcePath == "" {
-		config.SourcePath = filepath.Dir(path)
+		config.SourcePath = filepath.Dir(configPath)
 	}
 
 	// Resolve environment variables
 	config.SourcePath = os.ExpandEnv(config.SourcePath)
 	config.InstallPath = os.ExpandEnv(config.InstallPath)
+	config.LockfilePath = os.ExpandEnv(config.LockfilePath)
+
+	// Determine the lockfile path if not configured
+	if config.LockfilePath == "" {
+		config.LockfilePath = path.Join(config.InstallPath, "dots", "dotlock.json")
+	}
 
 	return config, nil
+}
+
+// LoadLockfile reads and unmarshals the json lockfile into a SourceLockfile.
+func LoadLockfile(config *SourceConfig) (*SourceLockfile, error) {
+	lockfile := &SourceLockfile{}
+
+	file, err := os.Open(config.LockfilePath)
+	if err != nil {
+		return lockfile, nil
+	}
+
+	defer file.Close()
+
+	if err := json.NewDecoder(file).Decode(lockfile); err != nil {
+		return nil, err
+	}
+
+	return lockfile, nil
+}
+
+// WriteLockfile updates or creates the lockfile on the system.
+func WriteLockfile(lockfile *SourceLockfile, config *SourceConfig) error {
+	file, err := os.OpenFile(config.LockfilePath, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+
+	if err := json.NewEncoder(file).Encode(lockfile); err != nil {
+		return err
+	}
+
+	return file.Sync()
 }
