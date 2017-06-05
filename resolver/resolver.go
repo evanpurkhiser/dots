@@ -41,12 +41,26 @@ func (c Configurations) Files() []string {
 	return files
 }
 
-// Filter filters down a Configurations list to only configs with the specified prefix
-func (c Configurations) Filter(prefix string) Configurations {
+// Filter filters down a Configurations list to only configs with the specified prefixes
+func (c Configurations) Filter(prefixes []string) Configurations {
+	if len(prefixes) == 0 {
+		return c
+	}
+
 	for path := range c {
-		if !strings.HasPrefix(path, prefix) {
+		filtered := true
+
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(path, prefix) {
+				filtered = false
+				break
+			}
+		}
+
+		if filtered {
 			delete(c, path)
 		}
+
 	}
 
 	return c
