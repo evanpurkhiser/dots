@@ -148,10 +148,6 @@ type Config struct {
 	// CurrentConfigs is a list of files that are currently installed. This
 	// list will be used to determine which configurations have been removed.
 	CurrentConfigs []string
-
-	// FilterPrefix specifies the prefix that should be used to filter down the
-	// list of installable configurations.
-	FilterPrefix string
 }
 
 // ResolveConfigurations walks the source tree and builds a Configuration
