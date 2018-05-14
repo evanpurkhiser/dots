@@ -5,49 +5,53 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"go.evanpurkhiser.com/dots/config"
 )
 
 const separator = string(filepath.Separator)
 
-// SourceFile represents a file that is used to compile a configuration file.
-// The source file knows what group it is part of.
+// SourceFile represents a file that is used to compile a dotfile. The source
+// file knows what group it is part of.
 type SourceFile struct {
 	Group    string
 	Path     string
 	Override bool
 }
 
-// ConfigFile represents a configuration file to be installed.
-type ConfigFile struct {
+// Dotfile represents a file to be installed.
+type Dotfile struct {
 	Path    string
 	Removed bool
 	Sources []*SourceFile
 }
 
-// Configurations holds a mapping of configuration file destinations mapped to
-// the ConfigFile struct representing that file.
-type Configurations map[string]*ConfigFile
+// Dotfiles holds a list of Dotfiles.
+type Dotfiles []*Dotfile
 
 // Files gets the list of all configuration files.
-func (c Configurations) Files() []string {
+func (d Dotfiles) Files() []string {
 	files := []string{}
 
-	for path := range c {
+	for _, dotfile := range d {
+		path := dotfile.Path
 		files = append(files, path)
 	}
-
-	sort.Strings(files)
 
 	return files
 }
 
-// Filter filters down a Configurations list to only configs with the specified prefixes
-func (c Configurations) Filter(prefixes []string) Configurations {
+// Filter filters down a Dotfiles list to only dotfiles with the specified
+// prefixes.
+func (d Dotfiles) Filter(prefixes []string) Dotfiles {
 	if len(prefixes) == 0 {
-		return c
+		return d
 	}
 
-	for path := range c {
+	dotfiles := Dotfiles{}
+
+	for _, dotfile := range d {
+		path := dotfile.Path
 		filtered := true
 
 		for _, prefix := range prefixes {
@@ -57,19 +61,41 @@ func (c Configurations) Filter(prefixes []string) Configurations {
 			}
 		}
 
-		if filtered {
-			delete(c, path)
+		if !filtered {
+			dotfiles = append(dotfiles, dotfile)
 		}
 
 	}
 
-	return c
+	return dotfiles
 }
 
-// resolveSources inserts or updates a Configurations list from a list of
-// configuration sources relative to the source root. Sources not belonging to
-// the specified group will be ignored.
-func resolveSources(configs Configurations, sources []string, group string) {
+// dotfiles is a package internal type used to construct the final list.
+type dotfileMap map[string]*Dotfile
+
+// asList constructs a Dotfiles object in order by the paths of the dotfiles.
+func (d dotfileMap) asList() Dotfiles {
+	paths := make([]string, 0, len(d))
+
+	for path := range d {
+		paths = append(paths, path)
+	}
+
+	sort.Strings(paths)
+
+	dotfiles := Dotfiles{}
+
+	for _, path := range paths {
+		dotfiles = append(dotfiles, d[path])
+	}
+
+	return dotfiles
+}
+
+// resolveSources inserts or updates a dotfiles map from a list of
+// dotfile sources relative to the source root. Sources not belonging to the
+// specified group will be ignored.
+func resolveSources(dotfiles dotfileMap, sources []string, group string) {
 	for _, source := range sources {
 		if !strings.HasPrefix(source, group) {
 			continue
@@ -82,99 +108,93 @@ func resolveSources(configs Configurations, sources []string, group string) {
 			Path:  source,
 		}
 
-		// The config file was added in a previous group mapping
-		if file, ok := configs[destPath]; ok {
+		// The dotfle file was added in a previous group mapping
+		if file, ok := dotfiles[destPath]; ok {
 			file.Sources = append(file.Sources, sourceFile)
 			continue
 		}
 
-		configs[destPath] = &ConfigFile{
+		dotfiles[destPath] = &Dotfile{
 			Path:    destPath,
 			Sources: []*SourceFile{sourceFile},
 		}
 	}
 }
 
-// resolveOverrides scans a Configurations list for config files that have
-// associated override files. The override files will be removed as individual
-// configurations and their sources will be inserted into config file they are
-// associated to.
-func resolveOverrides(configs Configurations, overrideSuffix string) {
-	for path, config := range configs {
+// resolveOverrides scans a dotfiles map for files that have associated
+// override files. The override files will be removed as individual dotfiles
+// and their sources will be inserted into the file they are associated to.
+func resolveOverrides(dotfiles dotfileMap, overrideSuffix string) {
+	for path, dotfile := range dotfiles {
 		if strings.HasSuffix(path, "."+overrideSuffix) {
 			continue
 		}
 
-		overridePath := path + overrideSuffix
-		overrideConfig, exists := configs[overridePath]
+		overridePath := path + "." + overrideSuffix
+		overrideDotfile, exists := dotfiles[overridePath]
 
 		if !exists {
 			continue
 		}
 
-		for _, source := range overrideConfig.Sources {
+		for _, source := range overrideDotfile.Sources {
 			source.Override = true
 		}
 
-		config.Sources = append(config.Sources, overrideConfig.Sources...)
-		delete(configs, overridePath)
+		dotfile.Sources = append(dotfile.Sources, overrideDotfile.Sources...)
+		delete(dotfiles, overridePath)
 	}
 }
 
-// resolveRemoved inserts entries into a Configurations list for files that
-// previously were installed but are no longer present to be installed.
-func resolveRemoved(configs Configurations, oldConfigs []string) {
-	for _, oldConfig := range oldConfigs {
-		if _, ok := configs[oldConfig]; ok {
+// resolveRemoved inserts entries into a dotfiles map for files that previously
+// were installed but are no longer present to be installed.
+func resolveRemoved(dotfiles dotfileMap, oldDotfiles []string) {
+	for _, oldDotfile := range oldDotfiles {
+		if _, ok := dotfiles[oldDotfile]; ok {
 			continue
 		}
 
-		configs[oldConfig] = &ConfigFile{
-			Path:    oldConfig,
+		dotfiles[oldDotfile] = &Dotfile{
+			Path:    oldDotfile,
 			Removed: true,
 		}
 	}
 }
 
-// Config specifies the configuration object to be pased into the
-// ResolveConfigurations function.
-type Config struct {
-	SourcePath     string
-	OverrideSuffix string
-
-	// Groups to resolve
-	Groups []string
-
-	// CurrentConfigs is a list of files that are currently installed. This
-	// list will be used to determine which configurations have been removed.
-	CurrentConfigs []string
-}
-
-// ResolveConfigurations walks the source tree and builds a Configuration
-// object, resolving group sources along the way.
-func ResolveConfigurations(config Config) Configurations {
+// sourceLoader provides a list of files given a source path.
+var sourceLoader = func(path string) []string {
 	sources := []string{}
-	configs := Configurations{}
 
 	walker := func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
 		}
 
-		srcPath := strings.TrimPrefix(path, config.SourcePath+separator)
+		srcPath := strings.TrimPrefix(path, path+separator)
 		sources = append(sources, srcPath)
 
 		return nil
 	}
 
-	filepath.Walk(config.SourcePath, walker)
+	filepath.Walk(path, walker)
 
-	for _, group := range config.Groups {
-		resolveSources(configs, sources, group)
+	return sources
+}
+
+// ResolveDotfiles walks the source tree and builds a Dotfiles object,
+// resolving group sources along the way.
+func ResolveDotfiles(conf config.SourceConfig, lockfile config.SourceLockfile) Dotfiles {
+	dotfiles := dotfileMap{}
+
+	sources := sourceLoader(conf.SourcePath)
+	groups := lockfile.ResolveGroups(conf)
+
+	for _, group := range groups {
+		resolveSources(dotfiles, sources, group)
 	}
 
-	//resolveRemoved(configs, config.CurrentConfigs)
-	resolveOverrides(configs, config.OverrideSuffix)
+	resolveRemoved(dotfiles, lockfile.InstalledFiles)
+	resolveOverrides(dotfiles, conf.OverrideSuffix)
 
-	return configs
+	return dotfiles.asList()
 }
