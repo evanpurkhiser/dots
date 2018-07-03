@@ -3,153 +3,84 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
+
+	"github.com/spf13/cobra"
+
+	"go.evanpurkhiser.com/dots/config"
 )
 
-const separator = string(filepath.Separator)
-
-// SourceFile represents a file that is used to compile a configuration file.
-// The source file knows what group it is part of.
-type SourceFile struct {
-	Group    string
-	Path     string
-	Override bool
-}
-
-// ConfigFile represents a configuration file to be installed.
-type ConfigFile struct {
-	Path    string
-	Removed bool
-	Sources []*SourceFile
-}
-
-// Configurations holds a mapping of configuration file destinations mapped to
-// the ConfigFile struct representing that file.
-type Configurations map[string]*ConfigFile
-
-// ResolveSources inserts or updates a Configurations list from a list of
-// configuration sources relative to the source root. Sources not belonging to
-// the specified group will be ignored.
-func ResolveSources(configs Configurations, sources []string, group string) {
-	for _, source := range sources {
-		if !strings.HasPrefix(source, group) {
-			continue
-		}
-
-		destPath := strings.TrimPrefix(source, group+separator)
-
-		sourceFile := &SourceFile{
-			Group: group,
-			Path:  source,
-		}
-
-		// The config file was added in a previous group mapping
-		if file, ok := configs[destPath]; ok {
-			file.Sources = append(file.Sources, sourceFile)
-			continue
-		}
-
-		configs[destPath] = &ConfigFile{
-			Path:    destPath,
-			Sources: []SourceFile{sourceFile},
-		}
-	}
-}
-
-// ResolveOverrides scans a Configurations list for config files that have
-// associated override files. The override files will be removed as individual
-// configurations and their sources will be inserted into config file they are
-// associated to.
-func ResolveOverrides(configs Configurations, overrideSuffix string) {
-	for path, config := range configs {
-		if strings.HasSuffix(path, overrideSuffix) {
-			continue
-		}
-
-		overridePath := path + overrideSuffix
-		overrideConfig, exists := configs[overridePath]
-
-		if !exists {
-			continue
-		}
-
-		for _, source := range overrideConfig.Sources {
-			source.Override = true
-		}
-
-		config.Sources = append(config.Sources, overrideConfig.Sources...)
-		delete(config, overridePath)
-	}
-}
-
-// ResolveRemoved inserts entries into a Configurations list for files that
-// previously were installed but are no longer present to be installed.
-func ResolveRemoved(configs Configurations, oldConfigs []string) {
-	for _, oldConfig := range oldConfigs {
-		if _, ok := configs[oldConfig]; ok {
-			continue
-		}
-
-		configs[oldConfig] = &ConfigFile{
-			Path:    oldConfig,
-			Removed: true,
-		}
-	}
-}
-
-// ResolveScripts herp derp
-func ResolveScripts(configs Configurations) {
-
-}
+var (
+	sourceConfig   *config.SourceConfig
+	sourceLockfile *config.SourceLockfile
+)
 
 func main() {
-	// TODO: Verify config file exists
-	configPath := "/home/evan/.local/etc"
+	path := config.SourceConfigPath()
 
-	var sources []string
+	loadConfigs := func(cmd *cobra.Command, args []string) error {
+		var err error
 
-	walker := func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
-			return nil
+		sourceConfig, err = config.LoadSourceConfig(path)
+		if err != nil {
+			return err
 		}
 
-		srcPath := strings.TrimPrefix(path, configPath+separator)
-		sources = append(sources, srcPath)
+		sourceLockfile, err = config.LoadLockfile(sourceConfig)
+		if err != nil {
+			return err
+		}
+
+		errs := config.SanitizeSourceConfig(sourceConfig)
+		if len(errs) > 0 {
+			fmt.Println(errs)
+		}
+
+		// TODO: If sanitization fails ask if we should continue anyway on destructive actions
+		// Maybe ask to show dry run with verbose output before proceeding?
 
 		return nil
 	}
 
-	filepath.Walk(configPath, walker)
+	cobra.EnableCommandSorting = false
 
-	configs := Configurations{}
+	rootCmd := cobra.Command{
+		Use:   "dots",
+		Short: "A portable tool for managing a single set of dotfiles",
 
-	// TODO: Add group validation: ensure mutual exlcusion and files exist.
-	//       Could just reduce the groups list and produce warnings for bad
-	//       groups.
-	groups := []string{
-		"base",
-		"machines/desktop",
+		SilenceUsage:      true,
+		SilenceErrors:     true,
+		PersistentPreRunE: loadConfigs,
 	}
 
-	for _, group := range groups {
-		ResolveSources(configs, sources, group)
+	rootCmd.AddCommand(&filesCmd)
+	rootCmd.AddCommand(&diffCmd)
+	rootCmd.AddCommand(&configCmd)
+
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
-	for _, config := range configs {
-		fmt.Printf("%#v\n", config)
-	}
+	//	fmt.Println(lockfile)
+	//
+	//	configs := resolver.ResolveConfigurations(resolver.Config{
+	//		Groups:         source.Groups,
+	//		SourcePath:     source.SourcePath,
+	//		OverrideSuffix: source.OverrideSuffix,
+	//	})
+	//
+	//	fmt.Println(configs["vim/config.vim"])
 
 	// TODO: Output writer that looks somthing like
 	//
 	// source:  /home/.local/etc
 	// install: /home/.config
 	//
-	// [=> base ]    bash/bashrc
-	// [=> composed] bash/environment
+	// [=> base]     -- bash/bashrc
+	// [=> composed] -- bash/environment
 	//  -> composing from base and machines/desktop groups
-	// [=> removed ] bash/bad-filemulti
-	// [=> compiled] bash/complex
+	// [=> removed]  -- bash/bad-filemulti
+	// [=> compiled] -- bash/complex
 	//  -> ignoring configs in base and common/work due to override
 	//  -> override file present in common/work-vm
 	//  -> composing from machines/crunchydev (spliced at common/work-vm:22)
@@ -157,5 +88,15 @@ func main() {
 	// [=> install script] base/bash.install
 	//  -> triggered by base/bash/bashrc
 	//  -> triggered by base/bash/environment
+
+	// CLI Interfaceo
+
+	// dots {config, install, diff, files, help}
+
+	// dots install [filter...]
+	// dots diff    [filter...]
+	// dots files   [filter...]
+
+	// dots config  {profiles, groups, use, override}
 
 }
