@@ -146,6 +146,10 @@ func LoadLockfile(config *SourceConfig) (*SourceLockfile, error) {
 
 // WriteLockfile updates or creates the lockfile on the system.
 func WriteLockfile(lockfile *SourceLockfile, config *SourceConfig) error {
+	if err := os.MkdirAll(path.Dir(config.LockfilePath), 0777); err != nil {
+		return err
+	}
+
 	file, err := os.OpenFile(config.LockfilePath, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return err
