@@ -189,7 +189,7 @@ func resolveRemoved(dotfiles dotfileMap, oldDotfiles []string) {
 }
 
 // sourceLoader provides a list of files given a source path.
-var sourceLoader = func(path string) []string {
+var sourceLoader = func(sourcePath string) []string {
 	sources := []string{}
 
 	walker := func(path string, info os.FileInfo, err error) error {
@@ -197,13 +197,13 @@ var sourceLoader = func(path string) []string {
 			return nil
 		}
 
-		srcPath := strings.TrimPrefix(path, path+separator)
+		srcPath := strings.TrimPrefix(path, sourcePath+separator)
 		sources = append(sources, srcPath)
 
 		return nil
 	}
 
-	filepath.Walk(path, walker)
+	filepath.Walk(sourcePath, walker)
 
 	return sources
 }
