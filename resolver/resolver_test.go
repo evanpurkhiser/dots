@@ -62,11 +62,12 @@ func TestResolveDotfiles(t *testing.T) {
 					},
 				},
 				{
-					Path: "blank.ovrd",
+					Path: "blank",
 					Sources: []*SourceFile{
 						{
-							Group: "machines/server",
-							Path:  "machines/server/blank.ovrd",
+							Group:    "machines/server",
+							Path:     "machines/server/blank.ovrd",
+							Override: true,
 						},
 					},
 				},
@@ -146,6 +147,87 @@ func TestResolveDotfiles(t *testing.T) {
 				},
 			},
 		},
+		// Override resolve order test. Override's should resolve as the groups
+		// are resolved.
+		{
+			CaseName: "Override resolve order",
+			SourceFiles: []string{
+				"base/bash/file1",
+				"machines/desktop/bash/file1.override",
+				"machines/server/bash/file1",
+				// Ensure resolving an override when there was no file to
+				// override does not override _later_ groups.
+				"base/bash/file2.override",
+				"machines/desktop/bash/file2",
+				// Ensure override files without any files to override have
+				// their override stripped.
+				"base/bash/file3.override",
+
+				"base/bash/file4.override",
+				"machines/desktop/bash/file4.override",
+			},
+			ExistingFiles: []string{},
+			Groups:        []string{"base", "machines/desktop", "machines/server"},
+			Expected: Dotfiles{
+				{
+					Path: "bash/file1",
+					Sources: []*SourceFile{
+						{
+							Group: "base",
+							Path:  "base/bash/file1",
+						},
+						{
+							Group:    "machines/desktop",
+							Path:     "machines/desktop/bash/file1.override",
+							Override: true,
+						},
+						{
+							Group: "machines/server",
+							Path:  "machines/server/bash/file1",
+						},
+					},
+				},
+				{
+					Path: "bash/file2",
+					Sources: []*SourceFile{
+						{
+							Group:    "base",
+							Path:     "base/bash/file2.override",
+							Override: true,
+						},
+						{
+							Group: "machines/desktop",
+							Path:  "machines/desktop/bash/file2",
+						},
+					},
+				},
+				{
+					Path: "bash/file3",
+					Sources: []*SourceFile{
+						{
+							Group:    "base",
+							Path:     "base/bash/file3.override",
+							Override: true,
+						},
+					},
+				},
+				{
+					Path: "bash/file4",
+					Sources: []*SourceFile{
+						{
+							Group:    "base",
+							Path:     "base/bash/file4.override",
+							Override: true,
+						},
+						{
+							Group:    "machines/desktop",
+							Path:     "machines/desktop/bash/file4.override",
+							Override: true,
+						},
+					},
+				},
+			},
+		},
 	}
 
 	ogSourceLoader := sourceLoader
@@ -181,7 +263,11 @@ func TestResolveDotfiles(t *testing.T) {
 		for _, dotfile := range dotfiles {
 			sourceFiles := []string{}
 			for _, source := range dotfile.Sources {
-				sourceFiles = append(sourceFiles, source.Path)
+				if source.Override {
+					sourceFiles = append(sourceFiles, source.Path+"[O]")
+				} else {
+					sourceFiles = append(sourceFiles, source.Path)
+				}
 			}
 
 			str := fmt.Sprintf("%s: [%s]", dotfile.Path, strings.Join(sourceFiles, ", "))

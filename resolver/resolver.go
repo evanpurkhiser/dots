@@ -123,14 +123,29 @@ func resolveSources(dotfiles dotfileMap, sources []string, group string) {
 
 // resolveOverrides scans a dotfiles map for files that have associated
 // override files. The override files will be removed as individual dotfiles
-// and their sources will be inserted into the file they are associated to.
+// and their sources will be inserted into the file they are associated to. Any
+// override dotfiels which do not override an existing dotfile will have a new
+// dotfile group created.
 func resolveOverrides(dotfiles dotfileMap, overrideSuffix string) {
+	flatten := map[string]string{}
+
 	for path, dotfile := range dotfiles {
-		if strings.HasSuffix(path, "."+overrideSuffix) {
+		if strings.HasSuffix(path, overrideSuffix) {
+			// If this override file has nothing to override mark it to be
+			// flattened (the suffix will be removed). We mark it instead of
+			// flattening it into the dotfiles map here as items added to maps
+			// may be itterated over if added while iterrating a map.
+			overridesPath := strings.TrimSuffix(path, overrideSuffix)
+
+			// Only if this override overides nothing
+			if _, ok := dotfiles[overridesPath]; !ok {
+				flatten[path] = overridesPath
+			}
+
 			continue
 		}
 
-		overridePath := path + "." + overrideSuffix
+		overridePath := path + overrideSuffix
 		overrideDotfile, exists := dotfiles[overridePath]
 
 		if !exists {
@@ -143,6 +158,18 @@ func resolveOverrides(dotfiles dotfileMap, overrideSuffix string) {
 
 		dotfile.Sources = append(dotfile.Sources, overrideDotfile.Sources...)
 		delete(dotfiles, overridePath)
+	}
+
+	for path, overridesPath := range flatten {
+		dotfiles[overridesPath] = dotfiles[path]
+		delete(dotfiles, path)
+
+		file := dotfiles[overridesPath]
+
+		// We can expect that only one source file should exist in the dotfiles
+		// source set. Mark it as an override source
+		file.Sources[0].Override = true
+		file.Path = strings.TrimSuffix(file.Path, overrideSuffix)
 	}
 }
 
@@ -191,10 +218,10 @@ func ResolveDotfiles(conf config.SourceConfig, lockfile config.SourceLockfile) D
 
 	for _, group := range groups {
 		resolveSources(dotfiles, sources, group)
+		resolveOverrides(dotfiles, "."+conf.OverrideSuffix)
 	}
 
 	resolveRemoved(dotfiles, lockfile.InstalledFiles)
-	resolveOverrides(dotfiles, conf.OverrideSuffix)
 
 	return dotfiles.asList()
 }
