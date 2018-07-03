@@ -61,7 +61,7 @@ type SourceConfig struct {
 
 	// Profiles is a mapping of profile names to a list of groups to install.
 	// Base groups do not need to be specified.
-	Profiles Profiles `json:"profiles"`
+	Profiles Profiles `yaml:"profiles"`
 
 	// ExpandEnvironment specifies a list of install file paths that when
 	// installed should have bash style parameter expansion done for
