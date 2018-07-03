@@ -78,11 +78,23 @@ type SourceLockfile struct {
 	Profile string `json:"profile"`
 
 	// Groups is a list of groups to be installed if no profile is specified.
-	// Does nothing if a profile has been specified.
+	// Does nothing if a profile has been specified. The base groups from the
+	// configuration will always be installed.
 	Groups []string `json:"groups"`
 
 	// IntalledFiles is the current list of insatlled configuration files
 	InstalledFiles []string `json:"installed_files"`
+}
+
+// ResolveGroups returns the list of groups the lockfile is currently locked to.
+func (l *SourceLockfile) ResolveGroups(config SourceConfig) []string {
+	profileGroups, ok := config.Profiles[l.Profile]
+	if ok {
+		return append(config.BaseGroups, profileGroups...)
+	}
+
+	// Use lockfile groups override list
+	return append(config.BaseGroups, l.Groups...)
 }
 
 // SourceConfigPath determines the location of the source configuration file.
