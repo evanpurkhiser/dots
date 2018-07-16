@@ -10,7 +10,7 @@ import (
 
 var diffCmd = cobra.Command{
 	Use:   "diff [git-diff options] [filter...]",
-	Short: "Manage configuration of profiles and groups",
+	Short: "Compare the currently installed dotfiles to their sources",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		files := []string{}
 		flags := []string{}
