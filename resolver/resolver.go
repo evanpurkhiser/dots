@@ -23,6 +23,7 @@ type SourceFile struct {
 type Dotfile struct {
 	Path         string
 	Removed      bool
+	Added        bool
 	Sources      []*SourceFile
 	InstallFiles []string
 }
@@ -96,7 +97,7 @@ func (d dotfileMap) asList() Dotfiles {
 // resolveSources inserts or updates a dotfiles map from a list of
 // dotfile sources relative to the source root. Sources not belonging to the
 // specified group will be ignored.
-func resolveSources(dotfiles dotfileMap, sources []string, group string) {
+func resolveSources(dotfiles dotfileMap, sources, oldDotfiles []string, group string) {
 	for _, source := range sources {
 		if !strings.HasPrefix(source, group) {
 			continue
@@ -115,9 +116,18 @@ func resolveSources(dotfiles dotfileMap, sources []string, group string) {
 			continue
 		}
 
+		added := true
+		for _, oldDotfilePath := range oldDotfiles {
+			if oldDotfilePath == destPath {
+				added = false
+				break
+			}
+		}
+
 		dotfiles[destPath] = &Dotfile{
 			Path:    destPath,
 			Sources: []*SourceFile{sourceFile},
+			Added:   added,
 		}
 	}
 }
@@ -252,7 +262,7 @@ func ResolveDotfiles(conf config.SourceConfig, lockfile config.SourceLockfile) D
 	groups := lockfile.ResolveGroups(conf)
 
 	for _, group := range groups {
-		resolveSources(dotfiles, sources, group)
+		resolveSources(dotfiles, sources, lockfile.InstalledFiles, group)
 		resolveOverrides(dotfiles, "."+conf.OverrideSuffix)
 	}
 

@@ -52,13 +52,14 @@ func TestResolveDotfiles(t *testing.T) {
 				"machines/server/blank.ovrd",
 				"machines/desktop/multi-composed",
 			},
-			ExistingFiles:  []string{},
+			ExistingFiles:  []string{"bash/conf", "environment"},
 			Groups:         []string{"base", "machines/desktop", "machines/server"},
 			OverrideSuffix: "ovrd",
 			InstallSuffix:  "inst",
 			Expected: Dotfiles{
 				{
-					Path: "bash/conf",
+					Path:  "bash/conf",
+					Added: false,
 					Sources: []*SourceFile{
 						{
 							Group: "base",
@@ -68,7 +69,8 @@ func TestResolveDotfiles(t *testing.T) {
 					InstallFiles: []string{"base/bash.inst"},
 				},
 				{
-					Path: "bash/conf2",
+					Path:  "bash/conf2",
+					Added: true,
 					Sources: []*SourceFile{
 						{
 							Group: "base",
@@ -78,7 +80,8 @@ func TestResolveDotfiles(t *testing.T) {
 					InstallFiles: []string{"base/bash.inst"},
 				},
 				{
-					Path: "blank",
+					Path:  "blank",
+					Added: true,
 					Sources: []*SourceFile{
 						{
 							Group:    "machines/server",
@@ -88,7 +91,8 @@ func TestResolveDotfiles(t *testing.T) {
 					},
 				},
 				{
-					Path: "environment",
+					Path:  "environment",
+					Added: false,
 					Sources: []*SourceFile{
 						{
 							Group: "base",
@@ -101,7 +105,8 @@ func TestResolveDotfiles(t *testing.T) {
 					},
 				},
 				{
-					Path: "generic-config",
+					Path:  "generic-config",
+					Added: true,
 					Sources: []*SourceFile{
 						{
 							Group: "base",
@@ -116,7 +121,8 @@ func TestResolveDotfiles(t *testing.T) {
 					InstallFiles: []string{"base/generic-config.inst"},
 				},
 				{
-					Path: "multi-composed",
+					Path:  "multi-composed",
+					Added: true,
 					Sources: []*SourceFile{
 						{
 							Group: "base",
@@ -133,7 +139,8 @@ func TestResolveDotfiles(t *testing.T) {
 					},
 				},
 				{
-					Path: "vimrc",
+					Path:  "vimrc",
+					Added: true,
 					Sources: []*SourceFile{
 						{
 							Group: "machines/desktop",
@@ -152,9 +159,11 @@ func TestResolveDotfiles(t *testing.T) {
 				{
 					Path:    "bashrc",
 					Removed: true,
+					Added:   false,
 				},
 				{
-					Path: "vimrc",
+					Path:  "vimrc",
+					Added: false,
 					Sources: []*SourceFile{
 						{
 							Group: "base",
@@ -187,7 +196,8 @@ func TestResolveDotfiles(t *testing.T) {
 			Groups:        []string{"base", "machines/desktop", "machines/server"},
 			Expected: Dotfiles{
 				{
-					Path: "bash/file1",
+					Path:  "bash/file1",
+					Added: true,
 					Sources: []*SourceFile{
 						{
 							Group: "base",
@@ -205,7 +215,8 @@ func TestResolveDotfiles(t *testing.T) {
 					},
 				},
 				{
-					Path: "bash/file2",
+					Path:  "bash/file2",
+					Added: true,
 					Sources: []*SourceFile{
 						{
 							Group:    "base",
@@ -219,7 +230,8 @@ func TestResolveDotfiles(t *testing.T) {
 					},
 				},
 				{
-					Path: "bash/file3",
+					Path:  "bash/file3",
+					Added: true,
 					Sources: []*SourceFile{
 						{
 							Group:    "base",
@@ -229,7 +241,8 @@ func TestResolveDotfiles(t *testing.T) {
 					},
 				},
 				{
-					Path: "bash/file4",
+					Path:  "bash/file4",
+					Added: true,
 					Sources: []*SourceFile{
 						{
 							Group:    "base",
