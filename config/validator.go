@@ -33,7 +33,8 @@ func SanitizeSourceConfig(config *SourceConfig) []error {
 		return errs
 	}
 
-	// TODO: Source path sanitization (trim / add trailing slash)?
+	config.SourcePath = filepath.Clean(config.SourcePath)
+	config.InstallPath = filepath.Clean(config.InstallPath)
 
 	// 2. Remove duplicate groups
 	dedupedGroups, dupeGroups := removeDupes(config.Groups)
