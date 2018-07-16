@@ -16,6 +16,7 @@ func TestResolveDotfiles(t *testing.T) {
 		ExistingFiles  []string
 		Groups         []string
 		OverrideSuffix string
+		InstallSuffix  string
 		Expected       Dotfiles
 	}{
 		{
@@ -38,9 +39,12 @@ func TestResolveDotfiles(t *testing.T) {
 			CaseName: "Combined common test",
 			SourceFiles: []string{
 				"base/bash/conf",
+				"base/bash/conf2",
+				"base/bash.inst",
 				"base/environment",
 				"base/multi-composed",
 				"base/generic-config",
+				"base/generic-config.inst",
 				"machines/desktop/generic-config.ovrd",
 				"machines/desktop/vimrc",
 				"machines/desktop/environment",
@@ -51,6 +55,7 @@ func TestResolveDotfiles(t *testing.T) {
 			ExistingFiles:  []string{},
 			Groups:         []string{"base", "machines/desktop", "machines/server"},
 			OverrideSuffix: "ovrd",
+			InstallSuffix:  "inst",
 			Expected: Dotfiles{
 				{
 					Path: "bash/conf",
@@ -60,6 +65,17 @@ func TestResolveDotfiles(t *testing.T) {
 							Path:  "base/bash/conf",
 						},
 					},
+					InstallFiles: []string{"base/bash.inst"},
+				},
+				{
+					Path: "bash/conf2",
+					Sources: []*SourceFile{
+						{
+							Group: "base",
+							Path:  "base/bash/conf2",
+						},
+					},
+					InstallFiles: []string{"base/bash.inst"},
 				},
 				{
 					Path: "blank",
@@ -97,6 +113,7 @@ func TestResolveDotfiles(t *testing.T) {
 							Override: true,
 						},
 					},
+					InstallFiles: []string{"base/generic-config.inst"},
 				},
 				{
 					Path: "multi-composed",
@@ -238,9 +255,14 @@ func TestResolveDotfiles(t *testing.T) {
 			test.OverrideSuffix = "override"
 		}
 
+		if test.InstallSuffix == "" {
+			test.InstallSuffix = "install"
+		}
+
 		conf := config.SourceConfig{
 			BaseGroups:     []string{},
 			OverrideSuffix: test.OverrideSuffix,
+			InstallSuffix:  test.InstallSuffix,
 		}
 
 		lockfile := config.SourceLockfile{
@@ -270,7 +292,13 @@ func TestResolveDotfiles(t *testing.T) {
 				}
 			}
 
-			str := fmt.Sprintf("%s: [%s]", dotfile.Path, strings.Join(sourceFiles, ", "))
+			str := fmt.Sprintf(
+				"%s: [%s] I[%s]",
+				dotfile.Path,
+				strings.Join(sourceFiles, ", "),
+				strings.Join(dotfile.InstallFiles, ", "),
+			)
+
 			dotfileList = append(dotfileList, str)
 		}
 

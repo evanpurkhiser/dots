@@ -21,9 +21,10 @@ type SourceFile struct {
 
 // Dotfile represents a file to be installed.
 type Dotfile struct {
-	Path    string
-	Removed bool
-	Sources []*SourceFile
+	Path         string
+	Removed      bool
+	Sources      []*SourceFile
+	InstallFiles []string
 }
 
 // Dotfiles holds a list of Dotfiles.
@@ -173,6 +174,40 @@ func resolveOverrides(dotfiles dotfileMap, overrideSuffix string) {
 	}
 }
 
+// resolveInstalls looks for dotfiles ending in the installSuffix and will map
+// them to the dorfile theyare named after, or any dotfile's that exist within
+// the directory they are named after.
+func resolveInstalls(dotfiles dotfileMap, installSuffix string) {
+	for path, dotfile := range dotfiles {
+		if strings.HasSuffix(path, installSuffix) {
+			continue
+		}
+
+		// Check up through the tree for any associated install files. Dir
+		// returns a '.' when we've reached the root.
+		for path != "." {
+			installFilePath := path + installSuffix
+			installFile, exists := dotfiles[installFilePath]
+
+			path = filepath.Dir(path)
+
+			if !exists {
+				continue
+			}
+
+			for _, installSource := range installFile.Sources {
+				dotfile.InstallFiles = append(dotfile.InstallFiles, installSource.Path)
+			}
+		}
+	}
+
+	for path := range dotfiles {
+		if strings.HasSuffix(path, installSuffix) {
+			delete(dotfiles, path)
+		}
+	}
+}
+
 // resolveRemoved inserts entries into a dotfiles map for files that previously
 // were installed but are no longer present to be installed.
 func resolveRemoved(dotfiles dotfileMap, oldDotfiles []string) {
@@ -221,6 +256,9 @@ func ResolveDotfiles(conf config.SourceConfig, lockfile config.SourceLockfile) D
 		resolveOverrides(dotfiles, "."+conf.OverrideSuffix)
 	}
 
+	// Install files and removed files can be computed after all dotfiles have
+	// been cascaded together
+	resolveInstalls(dotfiles, "."+conf.InstallSuffix)
 	resolveRemoved(dotfiles, lockfile.InstalledFiles)
 
 	return dotfiles.asList()
