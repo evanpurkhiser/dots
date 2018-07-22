@@ -15,7 +15,7 @@ func (m modeStub) ModTime() time.Time { return time.Time{} }
 func (m modeStub) IsDir() bool        { return false }
 func (m modeStub) Sys() interface{}   { return nil }
 
-func TestFlattenModes(t *testing.T) {
+func TestFlattenPermissions(t *testing.T) {
 	testCases := []struct {
 		caseName         string
 		modes            []os.FileMode
@@ -25,31 +25,31 @@ func TestFlattenModes(t *testing.T) {
 		{
 			caseName: "All same permissions",
 			modes: []os.FileMode{
-				os.ModePerm & 0777,
-				os.ModePerm & 0777,
-				os.ModePerm & 0777,
+				0777,
+				0777,
+				0777,
 			},
-			expectedMode:     os.ModePerm & 0777,
+			expectedMode:     0777,
 			shouldTakeLowest: false,
 		},
 		{
 			caseName: "Differing permissions",
 			modes: []os.FileMode{
-				os.ModePerm & 0755,
-				os.ModePerm & 0644,
-				os.ModePerm & 0777,
+				0755,
+				0644,
+				0777,
 			},
-			expectedMode:     os.ModePerm & 0644,
+			expectedMode:     0644,
 			shouldTakeLowest: true,
 		},
 		{
-			caseName: "With extra file modes",
+			caseName: "Ignore extra modes",
 			modes: []os.FileMode{
-				os.ModePerm&0777 | os.ModeDir,
+				os.ModePerm&0644 | os.ModeDir,
 				os.ModePerm&0644 | os.ModeCharDevice,
 				os.ModePerm&0644 | os.ModeDir,
 			},
-			expectedMode:     os.ModePerm&0644 | os.ModeCharDevice,
+			expectedMode:     os.ModePerm & 0644,
 			shouldTakeLowest: true,
 		},
 	}
@@ -61,7 +61,7 @@ func TestFlattenModes(t *testing.T) {
 			infos[i] = modeStub(mode)
 		}
 
-		mode, tookLowest := flattenModes(infos)
+		mode, tookLowest := flattenPermissions(infos)
 
 		if mode != testCase.expectedMode {
 			t.Errorf("Expected mode = %s; got mode = %s", mode, testCase.expectedMode)

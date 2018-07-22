@@ -9,7 +9,7 @@ import (
 	"go.evanpurkhiser.com/dots/config"
 )
 
-const separator = string(filepath.Separator)
+const separator = string(os.PathSeparator)
 
 // SourceFile represents a file that is used to compile a dotfile. The source
 // file knows what group it is part of.

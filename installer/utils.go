@@ -6,19 +6,19 @@ import (
 	"os"
 )
 
-// flattenModes takes a list of objects implementing the os.FileInfo interface
-// and flattens the mode into a single FileMode. If any of the modes differ, it
-// will flatten the mode to into the lowest (least permissive) mode and set the
-// boolean return value to true.
-func flattenModes(infos []os.FileInfo) (m os.FileMode, tookLowest bool) {
+// flattenPermissions takes a list of objects implementing the os.FileInfo
+// interface and flattens the permissions into a single FileMode. If any of the
+// permissions differ, it will flatten the permission to into the lowest (least
+// permissive) permission and set the boolean return value to true.
+func flattenPermissions(infos []os.FileInfo) (m os.FileMode, tookLowest bool) {
 	if len(infos) < 1 {
 		return 0, false
 	}
 
-	lowestMode := infos[0].Mode()
+	lowestMode := infos[0].Mode() & os.ModePerm
 
 	for _, stat := range infos[1:] {
-		mode := stat.Mode()
+		mode := stat.Mode() & os.ModePerm
 
 		if mode != lowestMode {
 			tookLowest = true
@@ -30,6 +30,21 @@ func flattenModes(infos []os.FileInfo) (m os.FileMode, tookLowest bool) {
 	}
 
 	return lowestMode, tookLowest
+}
+
+// isAllRegular checks that a list of objects implementing the os.FileInfo
+// interface all contain regular-type modes.
+func isAllRegular(infos []os.FileInfo) bool {
+	allRegular := true
+
+	for _, info := range infos {
+		if !info.Mode().IsRegular() {
+			allRegular = false
+			break
+		}
+	}
+
+	return allRegular
 }
 
 const chunkSize = 4096

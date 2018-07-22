@@ -8,6 +8,13 @@ import (
 	"go.evanpurkhiser.com/dots/resolver"
 )
 
+// mustCompile indicates if a dotfile msut be compiled, or if a single-source
+// dotfile does not require any transformations and may be directly installed.
+func shouldCompile(dotfile *resolver.Dotfile, config config.SourceConfig) bool {
+	return len(dotfile.Sources) > 1
+}
+
+// OpenDotfile opens a source dotfile for streaming compilation.
 func OpenDotfile(dotfile *resolver.Dotfile, config config.SourceConfig) (io.ReadCloser, error) {
 	files := make([]*os.File, len(dotfile.Sources))
 
