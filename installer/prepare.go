@@ -26,14 +26,15 @@ type PreparedDotfile struct {
 	// compiled or installed.
 	SourcesAreIrregular bool
 
-	// Mode represents the mode bits of the os.FileMode (does not include
-	// permissions). This will not be set if the sources are irregular.
-	Mode os.FileMode
+	// Mode represents the change in the file mode bits of the source and
+	// target os.FileMode (does not include permissions). This will not be set
+	// if the sources are irregular.
+	Mode *FileMode
 
 	// Permissions represents the change in permission between the compiled source
 	// and the currently installed dotfile. Equal permissions can be verified
 	// by calling Permissions.IsSame.
-	Permissions Permissions
+	Permissions *FileMode
 
 	// SourcePermissionsDiffer indicates that a compiled dotfile (one with
 	// multiple sources) does not have consistent permissions across all
@@ -55,15 +56,21 @@ type PreparedDotfile struct {
 	sourceInfo []os.FileInfo
 }
 
-// Permissions represents a change in file permissions.
-type Permissions struct {
+// IsChanged reports if the prepared dotfile has changes from the target
+// dotfile.
+func (p *PreparedDotfile) IsChanged() bool {
+	return p.IsNew || p.ContentsDiffer || p.Permissions.IsChanged() || p.Mode.IsChanged()
+}
+
+// FileMode represents the new and old dotfile file mode.
+type FileMode struct {
 	Old os.FileMode
 	New os.FileMode
 }
 
-// IsSame returns a boolean value indicating if the modes are equal.
-func (d Permissions) IsSame() bool {
-	return d.New == d.Old
+// IsChanged returns a boolean value indicating if the modes are equal.
+func (d FileMode) IsChanged() bool {
+	return d.New != d.Old
 }
 
 // PreparedDotfiles is a list of prepared dotfiles.
@@ -129,7 +136,7 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 
 		sourcePermissions, tookLowest := flattenPermissions(sourceInfo)
 
-		prepared.Permissions = Permissions{
+		prepared.Permissions = &FileMode{
 			Old: targetInfo.Mode() & os.ModePerm,
 			New: sourcePermissions,
 		}
@@ -137,11 +144,11 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 
 		prepared.SourcesAreIrregular = !isAllRegular(sourceInfo)
 
-		// NOTE: This currently drops non-mode bits (permissions are included
-		// seperately), however should the dotfile set ModeAppend, ModeSticky,
-		// etc, these modes will not be included here.
 		if !prepared.SourcesAreIrregular {
-			prepared.Mode = sourceInfo[0].Mode() & os.ModeType
+			prepared.Mode = &FileMode{
+				Old: targetInfo.Mode() &^ os.ModePerm,
+				New: sourceInfo[0].Mode() &^ os.ModePerm,
+			}
 		}
 
 		// If the dotfile does not require compilation we can directly compare

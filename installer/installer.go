@@ -36,8 +36,7 @@ func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 		return fmt.Errorf("Source files are not all regular files")
 	}
 
-	// No change
-	if !dotfile.IsNew && !dotfile.ContentsDiffer && dotfile.Permissions.IsSame() {
+	if !dotfile.IsChanged() {
 		return nil
 	}
 
@@ -46,10 +45,14 @@ func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 		return os.Remove(installPath)
 	}
 
-	targetMode := dotfile.Permissions.New | dotfile.Mode
+	targetMode := dotfile.Permissions.New | dotfile.Mode.New
 
-	// Only permissions differ
-	if !dotfile.IsNew && !dotfile.Permissions.IsSame() && !dotfile.ContentsDiffer {
+	// Only filemode differs
+	modeChanged := !dotfile.IsNew &&
+		!dotfile.ContentsDiffer &&
+		(dotfile.Permissions.IsChanged() || dotfile.Mode.IsChanged())
+
+	if modeChanged {
 		return os.Chmod(installPath, targetMode)
 	}
 
