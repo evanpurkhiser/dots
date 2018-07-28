@@ -51,6 +51,7 @@ func main() {
 
 	rootCmd.AddCommand(&filesCmd)
 	rootCmd.AddCommand(&diffCmd)
+	rootCmd.AddCommand(&installCmd)
 	rootCmd.AddCommand(&configCmd)
 
 	if err := rootCmd.Execute(); err != nil {
