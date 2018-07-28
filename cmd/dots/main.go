@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"go.evanpurkhiser.com/dots/config"
@@ -14,33 +14,30 @@ var (
 	sourceLockfile *config.SourceLockfile
 )
 
-func main() {
+func loadConfigs(cmd *cobra.Command, args []string) error {
+	var err error
+
 	path := config.SourceConfigPath()
 
-	loadConfigs := func(cmd *cobra.Command, args []string) error {
-		var err error
-
-		sourceConfig, err = config.LoadSourceConfig(path)
-		if err != nil {
-			return err
-		}
-
-		sourceLockfile, err = config.LoadLockfile(sourceConfig)
-		if err != nil {
-			return err
-		}
-
-		errs := config.SanitizeSourceConfig(sourceConfig)
-		if len(errs) > 0 {
-			fmt.Println(errs)
-		}
-
-		// TODO: If sanitization fails ask if we should continue anyway on destructive actions
-		// Maybe ask to show dry run with verbose output before proceeding?
-
-		return nil
+	sourceConfig, err = config.LoadSourceConfig(path)
+	if err != nil {
+		return err
 	}
 
+	sourceLockfile, err = config.LoadLockfile(sourceConfig)
+	if err != nil {
+		return err
+	}
+
+	warns := config.SanitizeSourceConfig(sourceConfig)
+	for _, err := range warns {
+		color.New(color.FgYellow).Fprintf(os.Stderr, "warn: %s\n", err)
+	}
+
+	return nil
+}
+
+func main() {
 	cobra.EnableCommandSorting = false
 
 	rootCmd := cobra.Command{
@@ -57,46 +54,7 @@ func main() {
 	rootCmd.AddCommand(&configCmd)
 
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+		color.New(color.FgRed).Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(1)
 	}
-
-	//	fmt.Println(lockfile)
-	//
-	//	configs := resolver.ResolveConfigurations(resolver.Config{
-	//		Groups:         source.Groups,
-	//		SourcePath:     source.SourcePath,
-	//		OverrideSuffix: source.OverrideSuffix,
-	//	})
-	//
-	//	fmt.Println(configs["vim/config.vim"])
-
-	// TODO: Output writer that looks somthing like
-	//
-	// source:  /home/.local/etc
-	// install: /home/.config
-	//
-	// [=> base]     -- bash/bashrc
-	// [=> composed] -- bash/environment
-	//  -> composing from base and machines/desktop groups
-	// [=> removed]  -- bash/bad-filemulti
-	// [=> compiled] -- bash/complex
-	//  -> ignoring configs in base and common/work due to override
-	//  -> override file present in common/work-vm
-	//  -> composing from machines/crunchydev (spliced at common/work-vm:22)
-	//
-	// [=> install script] base/bash.install
-	//  -> triggered by base/bash/bashrc
-	//  -> triggered by base/bash/environment
-
-	// CLI Interfaceo
-
-	// dots {config, install, diff, files, help}
-
-	// dots install [filter...]
-	// dots diff    [filter...]
-	// dots files   [filter...]
-
-	// dots config  {profiles, groups, use, override}
-
 }
