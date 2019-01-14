@@ -7,7 +7,7 @@
 #  3. Add the $HOME/.local/bin directory to the $PATH if it isn't already
 #  4. Source the dots/contrib/bash_completion script
 #
-# The `DOTS_CLONE_DIR` environment should be set to the
+# The `DOTS_CLONE_DIR` environment must be set to the dots repository being setup.
 #
 # This script MUST be sourced!
 
