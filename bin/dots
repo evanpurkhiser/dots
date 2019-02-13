@@ -163,7 +163,7 @@ def handle_exception(exc_type, value, trace):
 sys.excepthook = handle_exception
 
 # Globaly handle warnings in a clean way
-def handle_warning(message, category, filename, line):
+def handle_warning(message, category, filename, lineno, file=None, line=None):
     sys.stderr.write("\033[93m{}: {}\033[0m\n".format(category.__name__, message))
 
 warnings.showwarning = handle_warning
