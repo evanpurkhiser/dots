@@ -68,10 +68,6 @@ type SourceConfig struct {
 	// environment variables. These generally look like: ${HOME}. This
 	// configuration is useful for config files that do not support environment
 	// variable expansion.
-	//
-	// TODO: Decide if this is actually something we want to implement. It
-	//       makes diffing a bit harder since we can't straight compare the
-	//       file size for single files anymore.
 	ExpandEnvironment []string `yaml:"expand_environment"`
 }
 

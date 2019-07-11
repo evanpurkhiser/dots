@@ -24,6 +24,7 @@ type Dotfile struct {
 	Path         string
 	Removed      bool
 	Added        bool
+	ExpandEnv    bool
 	Sources      []*SourceFile
 	InstallFiles []string
 }
@@ -185,7 +186,7 @@ func resolveOverrides(dotfiles dotfileMap, overrideSuffix string) {
 }
 
 // resolveInstalls looks for dotfiles ending in the installSuffix and will map
-// them to the dorfile theyare named after, or any dotfile's that exist within
+// them to the dorfile they are named after, or any dotfile's that exist within
 // the directory they are named after.
 func resolveInstalls(dotfiles dotfileMap, installSuffix string) {
 	for path, dotfile := range dotfiles {
@@ -233,6 +234,16 @@ func resolveRemoved(dotfiles dotfileMap, oldDotfiles []string) {
 	}
 }
 
+func resolveExpandEnv(dotfiles dotfileMap, expandPaths []string) {
+	for _, expandTarget := range expandPaths {
+		for path, dotfile := range dotfiles {
+			if expandTarget == path {
+				dotfile.ExpandEnv = true
+			}
+		}
+	}
+}
+
 // sourceLoader provides a list of files given a source path.
 var sourceLoader = func(sourcePath string) []string {
 	sources := []string{}
@@ -270,6 +281,9 @@ func ResolveDotfiles(conf config.SourceConfig, lockfile config.SourceLockfile) D
 	// been cascaded together
 	resolveInstalls(dotfiles, "."+conf.InstallSuffix)
 	resolveRemoved(dotfiles, lockfile.InstalledFiles)
+
+	// Mark dotfiles which will have environment expansion
+	resolveExpandEnv(dotfiles, conf.ExpandEnvironment)
 
 	return dotfiles.asList()
 }

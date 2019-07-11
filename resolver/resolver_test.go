@@ -15,6 +15,7 @@ func TestResolveDotfiles(t *testing.T) {
 		SourceFiles    []string
 		ExistingFiles  []string
 		Groups         []string
+		ExpandEnv      []string
 		OverrideSuffix string
 		InstallSuffix  string
 		Expected       Dotfiles
@@ -54,6 +55,7 @@ func TestResolveDotfiles(t *testing.T) {
 			},
 			ExistingFiles:  []string{"bash/conf", "environment"},
 			Groups:         []string{"base", "machines/desktop", "machines/server"},
+			ExpandEnv:      []string{"generic-config"},
 			OverrideSuffix: "ovrd",
 			InstallSuffix:  "inst",
 			Expected: Dotfiles{
@@ -105,8 +107,9 @@ func TestResolveDotfiles(t *testing.T) {
 					},
 				},
 				{
-					Path:  "generic-config",
-					Added: true,
+					Path:      "generic-config",
+					ExpandEnv: true,
+					Added:     true,
 					Sources: []*SourceFile{
 						{
 							Group: "base",
@@ -260,8 +263,8 @@ func TestResolveDotfiles(t *testing.T) {
 		},
 	}
 
-	ogSourceLoader := sourceLoader
-	defer func() { sourceLoader = ogSourceLoader }()
+	origSourceLoader := sourceLoader
+	defer func() { sourceLoader = origSourceLoader }()
 
 	for _, test := range tests {
 		if test.OverrideSuffix == "" {
@@ -273,9 +276,10 @@ func TestResolveDotfiles(t *testing.T) {
 		}
 
 		conf := config.SourceConfig{
-			BaseGroups:     []string{},
-			OverrideSuffix: test.OverrideSuffix,
-			InstallSuffix:  test.InstallSuffix,
+			BaseGroups:        []string{},
+			OverrideSuffix:    test.OverrideSuffix,
+			InstallSuffix:     test.InstallSuffix,
+			ExpandEnvironment: test.ExpandEnv,
 		}
 
 		lockfile := config.SourceLockfile{
