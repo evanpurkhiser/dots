@@ -1,17 +1,93 @@
 package installer
 
 import (
+	"bytes"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"go.evanpurkhiser.com/dots/config"
 	"go.evanpurkhiser.com/dots/resolver"
 )
 
-// mustCompile indicates if a dotfile msut be compiled, or if a single-source
-// dotfile does not require any transformations and may be directly installed.
-func shouldCompile(dotfile *resolver.Dotfile, config config.SourceConfig) bool {
-	return len(dotfile.Sources) > 1
+type dotfileCompiler struct {
+	dotfile  *resolver.Dotfile
+	content  *bytes.Buffer
+	compiled bool
+	config   config.SourceConfig
+	files    []*os.File
+}
+
+// ensureCompiled transforms the source dotfiles into the dotfile output. It
+// will not recompile if the dotfile has already been compiled.
+func (c *dotfileCompiler) ensureCompiled() error {
+	if c.compiled {
+		return nil
+	}
+
+	compiledData := []byte{}
+
+	for i, sourceFile := range c.files {
+		data, err := ioutil.ReadAll(sourceFile)
+		if err != nil {
+			return err
+		}
+
+		// 1. Always trim whitespace off of the source file.
+		data = trimWhitespace(data)
+
+		// 2. For any source file that procedes after the first, trim shebang
+		//    markers for cleanlyness of bash configurations. We trim whitespace
+		//    again to remove any space after the shebang.
+		if i != 0 {
+			data = trimShebang(data)
+			data = trimWhitespace(data)
+		}
+
+		// Combine files with *one* blank line between them
+		if i != 0 {
+			compiledData = append(compiledData, '\n', '\n')
+		}
+
+		compiledData = append(compiledData, data...)
+	}
+
+	// 3. Expand environment variables if the dotfile was marked.
+	if c.dotfile.ExpandEnv {
+		compiledData = expandEnvironment(compiledData)
+	}
+
+	// 4. All files should end with a single newline
+	compiledData = append(compiledData, '\n')
+
+	// Store the compiled dotfile
+	c.compiled = true
+	c.content.Reset()
+	c.content.Write(compiledData)
+
+	return nil
+}
+
+// Read implements the io.Reader interface. Calling read will compile the
+// dotfile into it's final byte slice.
+func (c *dotfileCompiler) Read(p []byte) (int, error) {
+	c.ensureCompiled()
+	return c.content.Read(p)
+}
+
+// Close implments the io.Closer interface. Calling close will close all source
+// files associated to the dotfile.
+func (c *dotfileCompiler) Close() error {
+	var err error
+
+	for _, file := range c.files {
+		closeErr := file.Close()
+		if closeErr != nil {
+			err = closeErr
+		}
+	}
+
+	return err
 }
 
 // OpenDotfile opens a source dotfile for streaming compilation.
@@ -29,6 +105,7 @@ func OpenDotfile(dotfile *resolver.Dotfile, config config.SourceConfig) (io.Read
 
 	compiler := &dotfileCompiler{
 		dotfile: dotfile,
+		content: bytes.NewBuffer(nil),
 		config:  config,
 		files:   files,
 	}
@@ -36,34 +113,16 @@ func OpenDotfile(dotfile *resolver.Dotfile, config config.SourceConfig) (io.Read
 	return compiler, nil
 }
 
-type dotfileCompiler struct {
-	dotfile *resolver.Dotfile
-	config  config.SourceConfig
-	files   []*os.File
-}
-
-// TODO: If we want we can make this thing do caching of compiled dotfiels if
-// we expect to install them later
-func (c *dotfileCompiler) Read(p []byte) (n int, err error) {
-	readers := []io.Reader{}
-
-	for _, file := range c.files {
-		readers = append(readers, file)
+// mustCompile indicates if a dotfile must be compiled, or if a single-source
+// dotfile does not require any transformations and may be directly installed.
+func shouldCompile(dotfile *resolver.Dotfile, config config.SourceConfig) bool {
+	if len(dotfile.Sources) > 1 {
+		return true
 	}
 
-	// TODO: Implement filtered reading
-	return io.MultiReader(readers...).Read(p)
-}
-
-func (c *dotfileCompiler) Close() error {
-	var err error
-
-	for _, file := range c.files {
-		closeErr := file.Close()
-		if closeErr != nil {
-			err = closeErr
-		}
+	if dotfile.ExpandEnv {
+		return true
 	}
 
-	return err
+	return false
 }
