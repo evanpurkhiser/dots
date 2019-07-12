@@ -68,7 +68,7 @@ func TestResolveDotfiles(t *testing.T) {
 							Path:  "base/bash/conf",
 						},
 					},
-					InstallFiles: []string{"base/bash.inst"},
+					InstallScripts: []string{"base/bash.inst"},
 				},
 				{
 					Path:  "bash/conf2",
@@ -79,7 +79,7 @@ func TestResolveDotfiles(t *testing.T) {
 							Path:  "base/bash/conf2",
 						},
 					},
-					InstallFiles: []string{"base/bash.inst"},
+					InstallScripts: []string{"base/bash.inst"},
 				},
 				{
 					Path:  "blank",
@@ -121,7 +121,7 @@ func TestResolveDotfiles(t *testing.T) {
 							Override: true,
 						},
 					},
-					InstallFiles: []string{"base/generic-config.inst"},
+					InstallScripts: []string{"base/generic-config.inst"},
 				},
 				{
 					Path:  "multi-composed",
@@ -313,7 +313,7 @@ func TestResolveDotfiles(t *testing.T) {
 				"%s: [%s] I[%s]",
 				dotfile.Path,
 				strings.Join(sourceFiles, ", "),
-				strings.Join(dotfile.InstallFiles, ", "),
+				strings.Join(dotfile.InstallScripts, ", "),
 			)
 
 			dotfileList = append(dotfileList, str)
