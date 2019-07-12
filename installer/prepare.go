@@ -14,7 +14,8 @@ import (
 type PreparedDotfile struct {
 	*resolver.Dotfile
 
-	// IsNew indicates that the dotfile does not currently exist.
+	// IsNew indicates that the dotfile does not currently exist. A dotfile can
+	// be `Added` and not `IsNew` if a previous untracked dotfile file exists.
 	IsNew bool
 
 	// ContentsDiffer is a boolean flag representing that the compiled source
