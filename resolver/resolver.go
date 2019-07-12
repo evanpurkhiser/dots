@@ -21,11 +21,26 @@ type SourceFile struct {
 
 // Dotfile represents a file to be installed.
 type Dotfile struct {
-	Path         string
-	Removed      bool
-	Added        bool
-	ExpandEnv    bool
-	Sources      []*SourceFile
+	// Path is the location of the dotfile
+	Path string
+
+	// Removed indicates that the dotfile will been removed from the current set
+	// of installed dotfiles.
+	Removed bool
+
+	// Added indicates that dotfile does not currently exist in the set of
+	// installed dotfiles and will be added.
+	Added bool
+
+	// ExpandEnv indicates that the dotfile will have environments within the
+	// source content expanded.
+	ExpandEnv bool
+
+	// Sources is the set of SourceFiles
+	Sources []*SourceFile
+
+	// Install files is the list of installation scripts that will be executed
+	// when the dotfile has been installed or modified.
 	InstallFiles []string
 }
 
