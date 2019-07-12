@@ -3,7 +3,12 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"os/exec"
 	"strings"
+
+	"go.evanpurkhiser.com/dots/installer"
+	"go.evanpurkhiser.com/dots/resolver"
 
 	"github.com/spf13/cobra"
 )
@@ -29,26 +34,41 @@ var diffCmd = cobra.Command{
 
 		sourceTmp, err := ioutil.TempDir("", "dots-source")
 		if err != nil {
-			return fmt.Errorf("Failed to create tmp directory: %s\n", err)
+			return fmt.Errorf("failed to create tmp directory: %s", err)
+		}
+		defer os.RemoveAll(sourceTmp)
+
+		// Create a "pretty link" so that our diff looks nicer
+		prettyLink := sourceConfig.InstallPath + "-staged"
+		if err := os.Symlink(sourceTmp, prettyLink); err != nil {
+			return fmt.Errorf("failed to create tmp symlink: %s", err)
+		}
+		defer os.Remove(prettyLink)
+
+		installConfig := installer.InstallConfig{
+			SourceConfig:        sourceConfig,
+			OverrideInstallPath: sourceTmp,
+			SkipInstallScripts:  true,
 		}
 
-		activeTmp, err := ioutil.TempDir("", "dots-active")
-		if err != nil {
-			return fmt.Errorf("Failed to create tmp directory: %s\n", err)
-		}
+		dotfiles := resolver.ResolveDotfiles(*sourceConfig, *sourceLockfile)
+		prepared := installer.PrepareDotfiles(dotfiles.Filter(files), *sourceConfig)
+		installer.InstallDotfiles(prepared, installConfig)
 
-		fmt.Println(sourceTmp, activeTmp)
+		git := []string{"diff", "--no-index", "--diff-filter=MA"}
+		git = append(git, flags...)
+		git = append(git, "--", sourceConfig.InstallPath, prettyLink+"/")
 
-		exec := []string{"git", "diff", "--no-index"}
-		exec = append(exec, flags...)
-		exec = append(exec, "--", sourceTmp, activeTmp)
+		command := exec.Command("git", git...)
+		command.Stdout = os.Stdout
+		command.Stderr = os.Stderr
 
-		fmt.Println(exec)
+		command.Run()
 
 		return nil
 	},
 
-	Args: cobra.ArbitraryArgs,
+	Args:                  cobra.ArbitraryArgs,
 	DisableFlagsInUseLine: true,
 	DisableFlagParsing:    true,
 }

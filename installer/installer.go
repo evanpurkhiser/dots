@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"go.evanpurkhiser.com/dots/config"
+	"go.evanpurkhiser.com/dots/resolver"
 )
 
 const separator = string(os.PathSeparator)
@@ -23,8 +24,30 @@ type InstallConfig struct {
 	// OverrideInstallPath specifies a path to install the dotfile at,
 	// overriding the configuration in the SourceConfig.
 	OverrideInstallPath string
+
+	// ForceReinstall installs the dotfile even if the dotfile has not been
+	// changed from its source. This implies that install scripts will be run.
+	ForceReinstall bool
+
+	// SkipInstallScripts disables execution of any triggered install scripts
+	SkipInstallScripts bool
+
+	// TODO We can probably add a channel here to pipe logging output so that we
+	// can output some logging
 }
 
+// InstalledDotfile is a represents of the dotfile *after* it has been
+// installed into the configuration directory.
+type InstalledDotfile struct {
+	*PreparedDotfile
+
+	// InstallError represents an error that occurred during installation.
+	InstallError error
+}
+
+// InstallDotfile is given a prepared dotfile and installation configuration
+// and will perform all the necessary actions to install the file into it's
+// target location.
 func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 	installPath := config.SourceConfig.InstallPath + separator + dotfile.Path
 
@@ -36,7 +59,7 @@ func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 		return fmt.Errorf("Source files are not all regular files")
 	}
 
-	if !dotfile.IsChanged() {
+	if !dotfile.IsChanged() && !config.ForceReinstall {
 		return nil
 	}
 
@@ -79,17 +102,29 @@ func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 	return err
 }
 
-func InstallDotfiles(dotfiles PreparedDotfiles, config InstallConfig) []error {
+// RunInstallScripts executes all install scripts for a single dotfile.
+func RunInstallScripts(dotfile resolver.Dotfile, config InstallConfig) error {
+	// TODO actually implement this
+	fmt.Println(dotfile.InstallScripts)
+
+	return nil
+}
+
+// InstalledDotfiles asynchronously calls InstalledDotfile on all passed
+// PreparedDotfiles. Once all dotfiles have been installed, all install scripts
+// will execute, in order of installation (unless SkipInstallScripts is on).
+func InstallDotfiles(dotfiles PreparedDotfiles, config InstallConfig) []*InstalledDotfile {
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(len(dotfiles))
 
-	errors := []error{}
+	installed := make([]*InstalledDotfile, len(dotfiles))
 
-	for _, dotfile := range dotfiles {
+	for i, dotfile := range dotfiles {
 		go func(dotfile *PreparedDotfile) {
 			err := InstallDotfile(dotfile, config)
-			if err != nil {
-				errors = append(errors, err)
+			installed[i] = &InstalledDotfile{
+				PreparedDotfile: dotfile,
+				InstallError:    err,
 			}
 			waitGroup.Done()
 		}(dotfile)
@@ -97,5 +132,12 @@ func InstallDotfiles(dotfiles PreparedDotfiles, config InstallConfig) []error {
 
 	waitGroup.Wait()
 
-	return errors
+	// Nothing left to do if there are no install scripts to run
+	if config.SkipInstallScripts {
+		return installed
+	}
+
+	// TODO After all dotfiles are installed, we now must run our installation scripts
+
+	return installed
 }

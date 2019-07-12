@@ -39,9 +39,9 @@ type Dotfile struct {
 	// Sources is the set of SourceFiles
 	Sources []*SourceFile
 
-	// Install files is the list of installation scripts that will be executed
+	// InstallScripts is the list of installation scripts that will be executed
 	// when the dotfile has been installed or modified.
-	InstallFiles []string
+	InstallScripts []string
 }
 
 // Dotfiles holds a list of Dotfiles.
@@ -200,10 +200,10 @@ func resolveOverrides(dotfiles dotfileMap, overrideSuffix string) {
 	}
 }
 
-// resolveInstalls looks for dotfiles ending in the installSuffix and will map
-// them to the dorfile they are named after, or any dotfile's that exist within
+// resolveInstallScripts looks for dotfiles ending in the installSuffix and will map
+// them to the dotfile they are named after, or any dotfile's that exist within
 // the directory they are named after.
-func resolveInstalls(dotfiles dotfileMap, installSuffix string) {
+func resolveInstallScripts(dotfiles dotfileMap, installSuffix string) {
 	for path, dotfile := range dotfiles {
 		if strings.HasSuffix(path, installSuffix) {
 			continue
@@ -222,7 +222,7 @@ func resolveInstalls(dotfiles dotfileMap, installSuffix string) {
 			}
 
 			for _, installSource := range installFile.Sources {
-				dotfile.InstallFiles = append(dotfile.InstallFiles, installSource.Path)
+				dotfile.InstallScripts = append(dotfile.InstallScripts, installSource.Path)
 			}
 		}
 	}
@@ -292,9 +292,9 @@ func ResolveDotfiles(conf config.SourceConfig, lockfile config.SourceLockfile) D
 		resolveOverrides(dotfiles, "."+conf.OverrideSuffix)
 	}
 
-	// Install files and removed files can be computed after all dotfiles have
+	// Install scripts and removed files can be computed after all dotfiles have
 	// been cascaded together
-	resolveInstalls(dotfiles, "."+conf.InstallSuffix)
+	resolveInstallScripts(dotfiles, "."+conf.InstallSuffix)
 	resolveRemoved(dotfiles, lockfile.InstalledFiles)
 
 	// Mark dotfiles which will have environment expansion
