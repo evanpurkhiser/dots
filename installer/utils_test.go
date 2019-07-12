@@ -50,7 +50,7 @@ func TestFlattenPermissions(t *testing.T) {
 				os.ModePerm&0644 | os.ModeDir,
 			},
 			expectedMode:     os.ModePerm & 0644,
-			shouldTakeLowest: true,
+			shouldTakeLowest: false,
 		},
 	}
 
@@ -68,7 +68,7 @@ func TestFlattenPermissions(t *testing.T) {
 		}
 
 		if tookLowest != testCase.shouldTakeLowest {
-			t.Errorf("Expected tookLowest = %t", testCase.shouldTakeLowest)
+			t.Errorf("Expected tookLowest = %t, %s", testCase.shouldTakeLowest, testCase.caseName)
 		}
 	}
 }
