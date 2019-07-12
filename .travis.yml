@@ -1,0 +1,14 @@
+sudo: false
+language: go
+go: [ 1.11.x ]
+
+env:
+  - GO111MODULE=on
+
+install:
+  # Stop go get from executing
+  - true
+
+script:
+  # Build server for various operating systems
+  - go test ./...
