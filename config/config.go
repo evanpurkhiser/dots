@@ -169,7 +169,10 @@ func WriteLockfile(lockfile *SourceLockfile, config *SourceConfig) error {
 
 	defer file.Close()
 
-	if err := json.NewEncoder(file).Encode(lockfile); err != nil {
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+
+	if err := encoder.Encode(lockfile); err != nil {
 		return err
 	}
 
