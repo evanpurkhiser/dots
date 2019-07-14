@@ -39,8 +39,8 @@ type Dotfile struct {
 	// Sources is the set of SourceFiles
 	Sources []*SourceFile
 
-	// InstallScripts is the list of installation scripts that will be executed
-	// when the dotfile has been installed or modified.
+	// InstallScripts is the list of installation script pathsthat will be
+	// executed when the dotfile has been installed or modified.
 	InstallScripts []string
 }
 

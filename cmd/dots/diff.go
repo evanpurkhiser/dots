@@ -48,7 +48,6 @@ var diffCmd = cobra.Command{
 		installConfig := installer.InstallConfig{
 			SourceConfig:        sourceConfig,
 			OverrideInstallPath: sourceTmp,
-			SkipInstallScripts:  true,
 		}
 
 		dotfiles := resolver.ResolveDotfiles(*sourceConfig, *sourceLockfile)

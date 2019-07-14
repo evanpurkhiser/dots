@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"go.evanpurkhiser.com/dots/config"
-	"go.evanpurkhiser.com/dots/resolver"
 )
 
 const separator = string(os.PathSeparator)
@@ -28,9 +27,6 @@ type InstallConfig struct {
 	// ForceReinstall installs the dotfile even if the dotfile has not been
 	// changed from its source. This implies that install scripts will be run.
 	ForceReinstall bool
-
-	// SkipInstallScripts disables execution of any triggered install scripts
-	SkipInstallScripts bool
 
 	// TODO We can probably add a channel here to pipe logging output so that we
 	// can output some logging
@@ -102,26 +98,13 @@ func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 	return err
 }
 
-// RunInstallScripts executes all install scripts for a single dotfile.
-func RunInstallScripts(dotfile *resolver.Dotfile, config InstallConfig) error {
-	for range dotfile.InstallScripts {
-		continue
-	}
-
-	// TODO actually implement this
-	fmt.Println(dotfile.InstallScripts)
-
-	return nil
-}
-
 // InstallDotfiles asynchronously calls InstalledDotfile on all passed
-// PreparedDotfiles. Once all dotfiles have been installed, all install scripts
-// will execute, in order of installation (unless SkipInstallScripts is on).
-func InstallDotfiles(dotfiles PreparedDotfiles, config InstallConfig) []*InstalledDotfile {
+// PreparedDotfiles.
+func InstallDotfiles(install PreparedInstall, config InstallConfig) []*InstalledDotfile {
 	waitGroup := sync.WaitGroup{}
-	waitGroup.Add(len(dotfiles))
+	waitGroup.Add(len(install.Dotfiles))
 
-	installed := make([]*InstalledDotfile, len(dotfiles))
+	installed := make([]*InstalledDotfile, len(install.Dotfiles))
 
 	doInstall := func(i int, dotfile *PreparedDotfile) {
 		err := InstallDotfile(dotfile, config)
@@ -134,18 +117,11 @@ func InstallDotfiles(dotfiles PreparedDotfiles, config InstallConfig) []*Install
 		waitGroup.Done()
 	}
 
-	for i, dotfile := range dotfiles {
+	for i, dotfile := range install.Dotfiles {
 		go doInstall(i, dotfile)
 	}
 
 	waitGroup.Wait()
-
-	// Nothing left to do if there are no install scripts to run
-	if config.SkipInstallScripts {
-		return installed
-	}
-
-	// TODO After all dotfiles are installed, we now must run our installation scripts
 
 	return installed
 }

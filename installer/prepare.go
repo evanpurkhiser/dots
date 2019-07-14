@@ -8,6 +8,15 @@ import (
 	"go.evanpurkhiser.com/dots/resolver"
 )
 
+// PreparedInstall represents the set of dotfiles that which have been prepared
+// for installation, and the install scripts which are associated to the set of
+// dotfiles. The install scripts from dotfiles have been normalized so that
+// each script is only represented once in the list.
+type PreparedInstall struct {
+	Dotfiles       []*PreparedDotfile
+	InstallScripts []*InstallScript
+}
+
 // A PreparedDotfile represents a dotfile that has been "prepared" for
 // installation by verifying it's contents against the existing dotfile, and
 // checking various other flags that require knowledge of the existing dotfile.
@@ -74,13 +83,29 @@ func (d FileMode) IsChanged() bool {
 	return d.New != d.Old
 }
 
-// PreparedDotfiles is a list of prepared dotfiles.
-type PreparedDotfiles []*PreparedDotfile
+// InstallScript represents a single installation script that is mapped to one
+// or more dotfiles.
+type InstallScript struct {
+	Path       string
+	RequiredBy []*PreparedDotfile
+}
+
+// ShouldInstall indicates weather the installation script should be executed.
+// This will check weather any of the required dotfiles have changed.
+func (i *InstallScript) ShouldInstall() bool {
+	for _, dotfile := range i.RequiredBy {
+		if dotfile.IsChanged() {
+			return true
+		}
+	}
+
+	return false
+}
 
 // PrepareDotfiles iterates all passed dotfiles and creates an associated
-// PreparedDotfile, returning a list of all prepared dotfiles.
-func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) PreparedDotfiles {
-	preparedDotfiles := make(PreparedDotfiles, len(dotfiles))
+// PreparedDotfile, returning a PreparedInstall object.
+func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) PreparedInstall {
+	preparedDotfiles := make([]*PreparedDotfile, len(dotfiles))
 
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(len(dotfiles))
@@ -188,5 +213,32 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 
 	waitGroup.Wait()
 
-	return preparedDotfiles
+	// Once all dotfiles have been prepared, we can prepare the list of
+	// InstallScripts. This list will be normalized sot that each install script
+	// appears only once.
+	scriptMap := map[string][]*PreparedDotfile{}
+
+	for _, dotfile := range preparedDotfiles {
+		for _, path := range dotfile.InstallScripts {
+			if scriptMap[path] == nil {
+				scriptMap[path] = []*PreparedDotfile{dotfile}
+			} else {
+				scriptMap[path] = append(scriptMap[path], dotfile)
+			}
+		}
+	}
+
+	installScripts := make([]*InstallScript, 0, len(scriptMap))
+
+	for path, dotfiles := range scriptMap {
+		installScripts = append(installScripts, &InstallScript{
+			RequiredBy: dotfiles,
+			Path:       path,
+		})
+	}
+
+	return PreparedInstall{
+		Dotfiles:       preparedDotfiles,
+		InstallScripts: installScripts,
+	}
 }
