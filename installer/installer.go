@@ -103,14 +103,18 @@ func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 }
 
 // RunInstallScripts executes all install scripts for a single dotfile.
-func RunInstallScripts(dotfile resolver.Dotfile, config InstallConfig) error {
+func RunInstallScripts(dotfile *resolver.Dotfile, config InstallConfig) error {
+	for range dotfile.InstallScripts {
+		continue
+	}
+
 	// TODO actually implement this
 	fmt.Println(dotfile.InstallScripts)
 
 	return nil
 }
 
-// InstalledDotfiles asynchronously calls InstalledDotfile on all passed
+// InstallDotfiles asynchronously calls InstalledDotfile on all passed
 // PreparedDotfiles. Once all dotfiles have been installed, all install scripts
 // will execute, in order of installation (unless SkipInstallScripts is on).
 func InstallDotfiles(dotfiles PreparedDotfiles, config InstallConfig) []*InstalledDotfile {
@@ -119,15 +123,19 @@ func InstallDotfiles(dotfiles PreparedDotfiles, config InstallConfig) []*Install
 
 	installed := make([]*InstalledDotfile, len(dotfiles))
 
+	doInstall := func(i int, dotfile *PreparedDotfile) {
+		err := InstallDotfile(dotfile, config)
+
+		installed[i] = &InstalledDotfile{
+			PreparedDotfile: dotfile,
+			InstallError:    err,
+		}
+
+		waitGroup.Done()
+	}
+
 	for i, dotfile := range dotfiles {
-		go func(dotfile *PreparedDotfile) {
-			err := InstallDotfile(dotfile, config)
-			installed[i] = &InstalledDotfile{
-				PreparedDotfile: dotfile,
-				InstallError:    err,
-			}
-			waitGroup.Done()
-		}(dotfile)
+		go doInstall(i, dotfile)
 	}
 
 	waitGroup.Wait()
