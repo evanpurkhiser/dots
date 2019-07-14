@@ -41,6 +41,4 @@ deploy:
     target_commitish: $TRAVIS_COMMIT
     on:
       tags: false
-
-branches:
-  only: [ go-rewrite ]
+      branch: go-rewrite
