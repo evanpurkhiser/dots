@@ -1,5 +1,7 @@
 # Dots - A dotfile Management Tool
 
+TODO: Add contents section here
+
 In the desktop \*nix world "dotfiles" are the life and blood behind the
 customization of your environment. Everything from custom bash prompts to window
 manager configurations, dotfiles define your work flow. Because of this, it has
@@ -13,20 +15,20 @@ however. Because dotfiles can be spread all across the users `$HOME` the
 process of tracking these files can be tedious. A few strategies have emerged
 within the community that offers command over dotfiles:
 
- * Keeping `$HOME` under git version control - This can be difficult and
-   dangerous as every directory under your `$HOME` now appears to be in version
-   control, so running a `git` command will never fail.
+- Keeping `$HOME` under git version control - This can be difficult and
+  dangerous as every directory under your `$HOME` now appears to be in version
+  control, so running a `git` command will never fail.
 
- * Keeping the `$XDG_CONFIG_HOME` directory under version control and using
-   environment variables and scripts to force programs to read their
-   configurations from the `$XDG_CONFIG_HOME` directory - A great overall
-   strategy that keeps dotfiles more organized than keeping them in `$HOME`.
+- Keeping the `$XDG_CONFIG_HOME` directory under version control and using
+  environment variables and scripts to force programs to read their
+  configurations from the `$XDG_CONFIG_HOME` directory - A great overall
+  strategy that keeps dotfiles more organized than keeping them in `$HOME`.
 
- * Keeping dotfiles in a directory under `$HOME` and  writing an 'installation'
-   script to symbolically link the files to their appropriate location in the
-   users `$HOME` - While this method is rather robust, it can be difficult to
-   manage a installation script specifically for your dot files, and may impose
-   limits in how you organize your dotfiles.
+- Keeping dotfiles in a directory under `$HOME` and writing an 'installation'
+  script to symbolically link the files to their appropriate location in the
+  users `$HOME` - While this method is rather robust, it can be difficult to
+  manage a installation script specifically for your dot files, and may impose
+  limits in how you organize your dotfiles.
 
 However, none of these methods offer any sort of ability to manage dot files
 across multiple machines and environments. While you can use any one of these
@@ -50,41 +52,34 @@ machine you access and would like to have your environment configured in a snap.
 
 `dots` offers the following features:
 
- * **Configuration groups**  
-   When installing your dotfiles onto a new machine, `dots` offers you the
-   ability to select a specific 'group' of dotfiles that you would like to have
-   installed into that environment. By organizing your dotfiles into logical
-   groups (such as 'machine' groups) it's possible to only install the dotfiles
-   that are required by that environment.
+- **Configuration groups**  
+  When installing your dotfiles onto a new machine, `dots` offers you the
+  ability to select a specific 'group' of dotfiles that you would like to have
+  installed into that environment. By organizing your dotfiles into logical
+  groups (such as 'machine' groups) it's possible to only install the dotfiles
+  that are required by that environment.
 
- * **Cascading file structure**  
-   By selecting multiple configuration groups there is the possibility that two
-   groups both contain a dotfile with matching names. For example, if two
-   configuration groups both contain a `bashrc` file then the `dots` utility
-   will automatically merge these two files together. A special syntax is also
-   offered to allow for one file to override another or for the cascading files
-   to be merged into the files at specific points.
+- **Cascading file structure**  
+  By selecting multiple configuration groups there is the possibility that two
+  groups both contain a dotfile with matching names. For example, if two
+  configuration groups both contain a `bashrc` file then the `dots` utility
+  will automatically merge these two files together. A special syntax is also
+  offered to allow for one file to override another or for the cascading files
+  to be merged into the files at specific points.
 
- * **Installation time includes**  
-   Some configuration file formats do not support a way to natively 'include'
-   other configuration files into them. The `dots` utility allows for files to
-   be inserted into a specific configuration file using a special include
-   syntax (Known as "explict named append points"). The included file will also
-   follow the cascading file structure previously mentioned.
+- **Follows [XDG Base Directory Standard](http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)**  
+  The XDG Base Directory Standard specifies that all configuration files should
+  be located in the `$XDG_CONFIG_HOME` directory. By default, this is where all
+  configuration files and directories will be installed. While this does
+  require a little extra work to ensure all programs read their configuration
+  files from here it offers a much more organized view of user dotfiles.
 
- * **Follows [XDG Base Directory Standard](http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)**  
-   The XDG Base Directory Standard specifies that all configuration files should
-   be located in the `$XDG_CONFIG_HOME` directory. By default, this is where all
-   configuration files and directories will be installed. While this does
-   require a little extra work to ensure all programs read their configuration
-   files from here it offers a much more organized view of user dotfiles.
-
- * **Post installation scripts per file**  
-   It's possible to include a `.install` script with any specific dotfile. This
-   installation script will be executed any time the specific dotfile is
-   installed. This is useful for situations where you _need_ to symbolically
-   link a configuration file into `$HOME` or if something needs to be done after
-   installation (for example executing :BundleInstall for VIM).
+- **Post installation scripts per file**  
+  It's possible to include a `.install` script with any specific dotfile or
+  directory. This installation script will be executed any time the specific
+  dotfile is installed. This is useful for situations where you _need_ to
+  symbolically link a configuration file into `$HOME` or if something needs to
+  be done after installation (for example executing :BundleInstall for VIM).
 
 These features are expanded on below.
 
@@ -101,17 +96,15 @@ It's recommended to read through the entirety of this README to have a good
 understanding of how the dots management utility works. Here are a few key points
 to keep in mind however:
 
- * Configuration files will be installed into `$XDG_CONFIG_HOME`.
- * Configuration group directories are to be located in `$HOME/.local/etc`.
- * It's recomended to clone this repository into `$HOME/.local/lib/dots` but
-   not required.
- * A PKGBUILD file is also available for Arch Linux [on the
-   AUR](https://aur.archlinux.org/packages/dots-manager/).
- * The `dots` script should be made available in your `PATH`.
- * The `dots` script should support Python > 2.7 / Python > 3.2.
- * See [Evan Purkhisers personal
-   dotfiles](https://github.com/EvanPurkhiser/dots-personal) for an example
-   configuration.
+- Configuration files will be installed into `$XDG_CONFIG_HOME`.
+- Configuration group directories are to be located in `$HOME/.local/etc`.
+- A PKGBUILD file is also available for Arch Linux [on the
+  AUR](https://aur.archlinux.org/packages/dots-manager/).
+- The `dots` binary should be made available in your `PATH`.
+- The `dots` binary should support Python > 2.7 / Python > 3.2.
+- See [Evan Purkhisers personal
+  dotfiles](https://github.com/EvanPurkhiser/dots-personal) for an example
+  configuration.
 
 For details on using the `dots` tool itself see the `dots help` [USAGE
 output](bin/dots#L83).
@@ -135,10 +128,10 @@ $ source dots/contrib/initialize
 
 This will do the following:
 
- 1. Move the Dotfiles into `$HOME/.local/etc`
- 2. Symbolically link the dots executable into `$HOME/.local/bin`
- 3. Add `$HOME/.local/bin` into the `PATH` if it's not already
- 4. Source the `contrib/bash_completion` script
+1.  Move the Dotfiles into `$HOME/.local/etc`
+2.  Symbolically link the dots executable into `$HOME/.local/bin`
+3.  Add `$HOME/.local/bin` into the `PATH` if it's not already
+4.  Source the `contrib/bash_completion` script
 
 You can then setup your dotfiles using the `dots` command:
 
@@ -184,34 +177,6 @@ For example, if you would like to add more options to the `bashrc` for your
 will automagically be appended to the `base/bash/bashrc` file upon installation.
 
 Shebangs will be removed from the first line of the file being appended.
-
-#### Extending with explicit append points
-
-If a configuration file isn't procedural (in that you can't just append more
-configuration options to the end) such as a XML or JSON file, then you will need
-to use 'explicit append points'. This allows you to tell installer where to
-insert a subsequent configuration file contents.
-
-There are two types of explicit append points: default and named.
-
-##### Default append points
-
-One 'default' append point may be defined per configuration file. This is the
-point where subsequent configuration files will be inserted into the file.
-
-The default append point is denoted by a `!!@@` with no trailing characters.
-
-##### Named append points
-
-One or more 'named' append points may be defined per configuration file. This
-allows you to include multiple subsequent configuration files into the file.
-
-The named append point is denoted by a `!!@@` followed by a name. That same name
-should be appended to the subsequent configuration file names prefixed with a dot.
-
-For example, if you have a `bashrc` file that includes a `!!@@aliases` then the
-subsequent file that would be inserted at that append point would have the file
-name `bashrc.aliases`.
 
 ### Overriding
 
