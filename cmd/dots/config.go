@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"go.evanpurkhiser.com/dots/config"
@@ -40,12 +41,18 @@ var configActiveCmd = cobra.Command{
 	Use:   "active",
 	Short: "Shows the current active profile and groups",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println(sourceLockfile.Profile)
-
-		if groups, ok := sourceConfig.Profiles[sourceLockfile.Profile]; ok {
-			fmt.Printf("  %s\n", strings.Join(groups, "\n  "))
+		color.New(color.FgHiBlack).Print("profile: ")
+		if sourceLockfile.Profile == "" {
+			fmt.Println("<no profile>")
 		} else {
-			fmt.Printf("  %s\n", strings.Join(sourceLockfile.Groups, "\n  "))
+			fmt.Println(sourceLockfile.Profile)
+		}
+
+		color.New(color.FgHiBlack).Print("groups:  ")
+		if groups, ok := sourceConfig.Profiles[sourceLockfile.Profile]; ok {
+			fmt.Printf("[%s]\n", strings.Join(groups, ", "))
+		} else {
+			fmt.Printf("[%s]\n", strings.Join(sourceLockfile.Groups, ", "))
 		}
 
 		return nil
