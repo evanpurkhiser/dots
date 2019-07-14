@@ -162,7 +162,8 @@ func WriteLockfile(lockfile *SourceLockfile, config *SourceConfig) error {
 		return err
 	}
 
-	file, err := os.OpenFile(config.LockfilePath, os.O_RDWR|os.O_CREATE, 0666)
+	flags := os.O_RDWR | os.O_CREATE | os.O_TRUNC
+	file, err := os.OpenFile(config.LockfilePath, flags, 0666)
 	if err != nil {
 		return err
 	}
