@@ -86,8 +86,10 @@ func (d FileMode) IsChanged() bool {
 // InstallScript represents a single installation script that is mapped to one
 // or more dotfiles.
 type InstallScript struct {
-	Path       string
-	RequiredBy []*PreparedDotfile
+	RequiredBy   []*PreparedDotfile
+	Path         string
+	Executable   bool
+	PrepareError error
 }
 
 // ShouldInstall indicates weather the installation script should be executed.
@@ -231,10 +233,20 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 	installScripts := make([]*InstallScript, 0, len(scriptMap))
 
 	for path, dotfiles := range scriptMap {
-		installScripts = append(installScripts, &InstallScript{
+		script := InstallScript{
 			RequiredBy: dotfiles,
-			Path:       path,
-		})
+			Path:       config.SourcePath + separator + path,
+		}
+		installScripts = append(installScripts, &script)
+
+		scriptInfo, err := os.Stat(script.Path)
+		if err != nil {
+			script.PrepareError = err
+			continue
+		}
+
+		// Verify that the script is executable
+		script.Executable = scriptInfo.Mode()&0100 == 0100
 	}
 
 	return PreparedInstall{
