@@ -125,7 +125,7 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 		targetInfo, targetStatErr := os.Lstat(installPath)
 
 		exists := !os.IsNotExist(targetStatErr)
-		prepared.IsNew = exists
+		prepared.IsNew = !exists
 
 		// If we're unable to stat our target installation file and the file
 		// exists there's likely a permissions issue.
