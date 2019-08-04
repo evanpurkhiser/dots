@@ -24,11 +24,15 @@ var installCmd = cobra.Command{
 
 		config := installer.InstallConfig{
 			SourceConfig:   sourceConfig,
+			SourceLockfile: sourceLockfile,
 			ForceReinstall: forceReInstall,
 		}
 
-		installer.InstallDotfiles(prepared, config)
+		installed := installer.InstallDotfiles(prepared, config)
 		installer.RunInstallScripts(prepared, config)
+		installer.FinalizeInstall(installed, config)
+
+		// TODO Needs some error handling clenaup
 
 		return nil
 	},

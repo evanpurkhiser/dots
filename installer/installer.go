@@ -18,7 +18,8 @@ const directoryMode = 0755
 // InstallConfig represents configuration options available for installing
 // a single or set of dotfiles.
 type InstallConfig struct {
-	SourceConfig *config.SourceConfig
+	SourceConfig   *config.SourceConfig
+	SourceLockfile *config.SourceLockfile
 
 	// OverrideInstallPath specifies a path to install the dotfile at,
 	// overriding the configuration in the SourceConfig.
@@ -45,6 +46,11 @@ type InstalledDotfile struct {
 // and will perform all the necessary actions to install the file into it's
 // target location.
 func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
+	// Skip dotfiles that we failed to preapre
+	if dotfile.PrepareError != nil {
+		return nil
+	}
+
 	installPath := config.SourceConfig.InstallPath + separator + dotfile.Path
 
 	if config.OverrideInstallPath != "" {
@@ -124,4 +130,24 @@ func InstallDotfiles(install PreparedInstall, config InstallConfig) []*Installed
 	waitGroup.Wait()
 
 	return installed
+}
+
+// FinalizeInstall writes the updated lockfile after installation
+func FinalizeInstall(installed []*InstalledDotfile, installConfig InstallConfig) {
+	installedFiles := make([]string, 0, len(installed))
+
+	for _, dotfile := range installed {
+		if dotfile.Removed {
+			continue
+		}
+		if dotfile.InstallError != nil {
+			continue
+		}
+
+		installedFiles = append(installedFiles, dotfile.Path)
+	}
+
+	lockfile := installConfig.SourceLockfile
+	lockfile.InstalledFiles = installedFiles
+	config.WriteLockfile(lockfile, installConfig.SourceConfig)
 }
