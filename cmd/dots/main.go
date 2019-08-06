@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"runtime/debug"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/getsentry/sentry-go"
