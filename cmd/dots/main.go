@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/fatih/color"
+	"github.com/getsentry/sentry-go"
 	"github.com/spf13/cobra"
 
 	"go.evanpurkhiser.com/dots/config"
@@ -47,6 +48,12 @@ var rootCmd = cobra.Command{
 }
 
 func main() {
+	sentry.Init(sentry.ClientOptions{
+		Dsn: "https://4c3f2bfcecf64bda8a4729f205e9a540@sentry.io/1522580",
+	})
+
+	defer sentry.Recover()
+
 	cobra.EnableCommandSorting = false
 
 	rootCmd.AddCommand(&filesCmd)
