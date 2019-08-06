@@ -62,8 +62,6 @@ type PreparedDotfile struct {
 	// PrepareError keeps track of errors while preparing the dotfile. Should
 	// this contain any errors, the PreparedDotfile is likely incomplete.
 	PrepareError error
-
-	sourceInfo []os.FileInfo
 }
 
 // IsChanged reports if the prepared dotfile has changes from the target
@@ -78,9 +76,10 @@ type FileMode struct {
 	New os.FileMode
 }
 
-// IsChanged returns a boolean value indicating if the modes are equal.
+// IsChanged returns a boolean value indicating if the modes are equal. Will
+// never be true if the old or new mode is 0.
 func (d FileMode) IsChanged() bool {
-	return d.New != d.Old
+	return d.New != d.Old && d.Old != 0 && d.New != 0
 }
 
 // InstallScript represents a single installation script that is mapped to one
@@ -134,11 +133,6 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 			return
 		}
 
-		// Nothing needs to be verified if the dotfile is simply being added
-		if dotfile.Added && !exists {
-			return
-		}
-
 		if dotfile.Added && exists {
 			prepared.OverwritesExisting = true
 		}
@@ -148,8 +142,6 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 		}
 
 		sourceInfo := make([]os.FileInfo, len(dotfile.Sources))
-
-		prepared.sourceInfo = sourceInfo
 
 		for i, source := range dotfile.Sources {
 			path := config.SourcePath + separator + source.Path
@@ -164,19 +156,29 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 
 		sourcePermissions, tookLowest := flattenPermissions(sourceInfo)
 
+		targetMode := os.FileMode(0)
+		if exists {
+			targetMode = targetInfo.Mode()
+		}
+
 		prepared.Permissions = &FileMode{
-			Old: targetInfo.Mode() & os.ModePerm,
+			Old: targetMode & os.ModePerm,
 			New: sourcePermissions,
 		}
 		prepared.SourcePermissionsDiffer = tookLowest
 
 		prepared.SourcesAreIrregular = !isAllRegular(sourceInfo)
 
-		if !prepared.SourcesAreIrregular {
+		if len(sourceInfo) > 0 && !prepared.SourcesAreIrregular {
 			prepared.Mode = &FileMode{
-				Old: targetInfo.Mode() &^ os.ModePerm,
+				Old: targetMode &^ os.ModePerm,
 				New: sourceInfo[0].Mode() &^ os.ModePerm,
 			}
+		}
+
+		// Nothing needs to be verified if the dotfile is being added or removed.
+		if !exists || dotfile.Removed {
+			return
 		}
 
 		// If the dotfile does not require compilation we can directly compare
