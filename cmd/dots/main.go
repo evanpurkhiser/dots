@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"runtime/debug"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/getsentry/sentry-go"
@@ -47,12 +49,23 @@ var rootCmd = cobra.Command{
 	PersistentPreRunE: loadConfigs,
 }
 
+func sentryRecover() {
+	err := recover()
+	if err == nil {
+		return
+	}
+
+	sentry.CurrentHub().Recover(err)
+	sentry.Flush(time.Second * 5)
+	debug.PrintStack()
+}
+
 func main() {
 	sentry.Init(sentry.ClientOptions{
 		Dsn: "https://4c3f2bfcecf64bda8a4729f205e9a540@sentry.io/1522580",
 	})
 
-	defer sentry.Recover()
+	defer sentryRecover()
 
 	cobra.EnableCommandSorting = false
 
