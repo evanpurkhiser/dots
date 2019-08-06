@@ -54,13 +54,9 @@ func (l *Output) shouldLogDotfile(dotfile *installer.PreparedDotfile) bool {
 // DryrunInstall outputs the logging of a dryrun of the prepared dotfiles
 func (l *Output) DryrunInstall() {
 	l.InstallInfo()
-	fmt.Println()
-
 	for _, dotfile := range l.PreparedInstall.Dotfiles {
 		l.DotfileInfo(dotfile)
 	}
-
-	fmt.Println()
 }
 
 // InstallInfo outputs details about the pending installation. Output is only
@@ -74,13 +70,14 @@ func (l *Output) InstallInfo() {
 		"%s %s added %s removed %s modified %s error\n",
 		color.HiBlackString("legend:"),
 		color.HiGreenString("◼️"),
-		color.HiYellowString("◼️"),
-		color.HiBlueString("◼️"),
 		color.HiRedString("◼️"),
+		color.HiBlueString("◼️"),
+		color.HiRedString("⨉"),
 	)
 
 	fmt.Printf("%s %s\n", color.HiBlackString("source:"), l.SourceConfig.SourcePath)
 	fmt.Printf("%s %s\n", color.HiBlackString("target:"), l.SourceConfig.InstallPath)
+	fmt.Println()
 }
 
 // DotfileInfo outputs information about a single prepared dotfile. Will not
@@ -95,24 +92,23 @@ func (l *Output) DotfileInfo(dotfile *installer.PreparedDotfile) {
 		return
 	}
 
-	indicatorColor := color.New()
 	indicator := "◼️"
+	indicatorColor := color.New()
 
 	switch {
 	case dotfile.PrepareError != nil:
+		indicator = "⨉"
 		indicatorColor.Add(color.FgRed)
 	case dotfile.IsNew:
 		indicatorColor.Add(color.FgHiGreen)
 	case dotfile.Removed:
-		indicatorColor.Add(color.FgHiYellow)
+		indicatorColor.Add(color.FgHiRed)
 	case dotfile.IsChanged():
 		indicatorColor.Add(color.FgBlue)
 	default:
-		indicatorColor.Add(color.FgHiBlack)
 		indicator = "-"
+		indicatorColor.Add(color.FgHiBlack)
 	}
-
-	fmt.Printf(" %s ", indicatorColor.Sprint(indicator))
 
 	group := ""
 	if len(dotfile.Sources) == 1 {
@@ -134,8 +130,13 @@ func (l *Output) DotfileInfo(dotfile *installer.PreparedDotfile) {
 		color.HiBlackString("]"),
 	)
 
-	output := fmt.Sprintf("%%-%ds %%s\n", l.maxDotfileLength+1)
-	fmt.Printf(output, dotfile.Path, group)
+	output := fmt.Sprintf(" %%s %%-%ds %%s\n", l.maxDotfileLength+1)
+	fmt.Printf(
+		output,
+		indicatorColor.Sprint(indicator),
+		dotfile.Path,
+		group,
+	)
 
 	if dotfile.PrepareError != nil {
 		fmt.Printf("   %s", color.RedString(dotfile.PrepareError.Error()))
