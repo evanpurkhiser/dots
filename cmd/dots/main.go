@@ -55,14 +55,14 @@ func sentryRecover() {
 		return
 	}
 
-	sentry.CurrentHub().Recover(err)
-	sentry.Flush(time.Second * 5)
 	debug.PrintStack()
+	sentry.CurrentHub().Recover(err)
 }
 
 func main() {
 	sentry.Init(sentry.ClientOptions{
-		Dsn: "https://4c3f2bfcecf64bda8a4729f205e9a540@sentry.io/1522580",
+		Dsn:       "https://4c3f2bfcecf64bda8a4729f205e9a540@sentry.io/1522580",
+		Transport: sentry.NewHTTPSyncTransport(),
 	})
 
 	defer sentryRecover()
