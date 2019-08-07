@@ -9,13 +9,16 @@ import (
 	"go.evanpurkhiser.com/dots/installer"
 )
 
+var e = color.RedString("errs:")
+var w = color.YellowString("warn:")
+var n = color.CyanString("note:")
+
 // Config is a object used to configure the output logger.
 type Config struct {
 	SourceConfig    config.SourceConfig
 	InstallConfig   installer.InstallConfig
 	PreparedInstall installer.PreparedInstall
 	IsVerbose       bool
-	IsInfo          bool
 }
 
 // New creates a output logger given a configuration.
@@ -84,7 +87,7 @@ func (l *Output) InstallInfo() {
 // output anything without IsInfo. When IsVerbose is enabled additional
 // information about the prepared dotfile will be included.
 func (l *Output) DotfileInfo(dotfile *installer.PreparedDotfile) {
-	if !l.IsInfo {
+	if !l.IsVerbose {
 		return
 	}
 
@@ -130,7 +133,7 @@ func (l *Output) DotfileInfo(dotfile *installer.PreparedDotfile) {
 		color.HiBlackString("]"),
 	)
 
-	output := fmt.Sprintf(" %%s %%-%ds %%s\n", l.maxDotfileLength+1)
+	output := fmt.Sprintf(" %%s %%-%ds %%s", l.maxDotfileLength+1)
 	fmt.Printf(
 		output,
 		indicatorColor.Sprint(indicator),
@@ -138,13 +141,40 @@ func (l *Output) DotfileInfo(dotfile *installer.PreparedDotfile) {
 		group,
 	)
 
+	if dotfile.Permissions.IsChanged() {
+		fmt.Printf(
+			" [%s %s %s]",
+			color.New(color.FgHiRed).Sprintf("%#o", int(dotfile.Permissions.Old)),
+			color.HiWhiteString("→"),
+			color.New(color.FgHiGreen).Sprintf("%#o", int(dotfile.Permissions.New)),
+		)
+	}
+
+	ln(n, dotfile.Mode.Old.String())
+
+	ln := func(v ...interface{}) {
+		fmt.Printf("   %s %s\n", v...)
+	}
+
+	fmt.Println()
+
 	if dotfile.PrepareError != nil {
-		fmt.Printf("   %s", color.RedString(dotfile.PrepareError.Error()))
+		ln(e, color.HiRedString(dotfile.PrepareError.Error()))
 	}
 
-	if !l.IsVerbose {
-		return
+	if dotfile.SourcesAreIrregular {
+		ln(e, "source files are irregular")
 	}
 
-	// TODO: Implement all verbosity outputs here
+	if dotfile.OverwritesExisting {
+		ln(w, "ovewriting existing file")
+	}
+
+	if dotfile.SourcePermissionsDiffer {
+		ln(w, "inconsistent source file permissions")
+	}
+
+	if dotfile.RemovedNull {
+		ln(n, "nothing to remove")
+	}
 }

@@ -15,7 +15,6 @@ var installCmd = cobra.Command{
 		forceReInstall, _ := cmd.Flags().GetBool("reinstall")
 		verbose, _ := cmd.Flags().GetBool("verbose")
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
-		info, _ := cmd.Flags().GetBool("info")
 
 		dotfiles := resolver.ResolveDotfiles(*sourceConfig, *sourceLockfile).Filter(args)
 		prepared := installer.PrepareDotfiles(dotfiles, *sourceConfig)
@@ -31,7 +30,6 @@ var installCmd = cobra.Command{
 			InstallConfig:   installConfig,
 			PreparedInstall: prepared,
 			IsVerbose:       verbose,
-			IsInfo:          info || verbose || dryRun,
 		})
 
 		if dryRun {
@@ -55,7 +53,6 @@ func init() {
 	flags.SortFlags = false
 
 	flags.BoolP("reinstall", "r", false, "forces execution of all installation scripts")
-	flags.BoolP("info", "i", false, "prints install operation details")
-	flags.BoolP("verbose", "v", false, "prints debug data, implies info")
-	flags.BoolP("dry-run", "n", false, "do not mutate any dotfiles, implies info")
+	flags.BoolP("verbose", "v", false, "prints debug data")
+	flags.BoolP("dry-run", "n", false, "do not mutate any dotfiles, implies verbose")
 }
