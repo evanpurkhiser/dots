@@ -150,8 +150,6 @@ func (l *Output) DotfileInfo(dotfile *installer.PreparedDotfile) {
 		)
 	}
 
-	ln(n, dotfile.Mode.Old.String())
-
 	ln := func(v ...interface{}) {
 		fmt.Printf("   %s %s\n", v...)
 	}
