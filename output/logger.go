@@ -150,11 +150,11 @@ func (l *Output) DotfileInfo(dotfile *installer.PreparedDotfile) {
 		)
 	}
 
+	fmt.Println()
+
 	ln := func(v ...interface{}) {
 		fmt.Printf("   %s %s\n", v...)
 	}
-
-	fmt.Println()
 
 	if dotfile.PrepareError != nil {
 		ln(e, color.HiRedString(dotfile.PrepareError.Error()))

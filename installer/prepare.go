@@ -36,11 +36,6 @@ type PreparedDotfile struct {
 	// compiled or installed.
 	SourcesAreIrregular bool
 
-	// Mode represents the change in the file mode bits of the source and
-	// target os.FileMode (does not include permissions). This will not be set
-	// if the sources are irregular.
-	Mode FileMode
-
 	// Permissions represents the change in permission between the compiled source
 	// and the currently installed dotfile. Equal permissions can be verified
 	// by calling Permissions.IsSame.
@@ -67,7 +62,7 @@ type PreparedDotfile struct {
 // IsChanged reports if the prepared dotfile has changes from the target
 // dotfile.
 func (p *PreparedDotfile) IsChanged() bool {
-	return p.IsNew || p.Added || p.Removed || p.ContentsDiffer || p.Permissions.IsChanged() || p.Mode.IsChanged()
+	return p.IsNew || p.Added || p.Removed || p.ContentsDiffer || p.Permissions.IsChanged()
 }
 
 // FileMode represents the new and old dotfile file mode.
@@ -165,16 +160,9 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 			Old: targetMode & os.ModePerm,
 			New: sourcePermissions,
 		}
+
 		prepared.SourcePermissionsDiffer = tookLowest
-
 		prepared.SourcesAreIrregular = !isAllRegular(sourceInfo)
-
-		if len(sourceInfo) > 0 && !prepared.SourcesAreIrregular {
-			prepared.Mode = FileMode{
-				Old: targetMode &^ os.ModePerm,
-				New: sourceInfo[0].Mode() &^ os.ModePerm,
-			}
-		}
 
 		// Nothing needs to be verified if the dotfile is being added or removed.
 		if !exists || dotfile.Removed {

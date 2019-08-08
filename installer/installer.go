@@ -70,12 +70,11 @@ func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 		return os.Remove(installPath)
 	}
 
-	targetMode := dotfile.Permissions.New | dotfile.Mode.New
+	targetMode := dotfile.Permissions.New
 
 	// Only filemode differs
 	modeChanged := !dotfile.IsNew &&
-		!dotfile.ContentsDiffer &&
-		(dotfile.Permissions.IsChanged() || dotfile.Mode.IsChanged())
+		!dotfile.ContentsDiffer && dotfile.Permissions.IsChanged()
 
 	if modeChanged {
 		return os.Chmod(installPath, targetMode)
