@@ -160,10 +160,6 @@ func (l *Output) DotfileInfo(dotfile *installer.PreparedDotfile) {
 		ln(e, color.HiRedString(dotfile.PrepareError.Error()))
 	}
 
-	if dotfile.SourcesAreIrregular {
-		ln(e, "source files are irregular")
-	}
-
 	if dotfile.OverwritesExisting {
 		ln(w, "ovewriting existing file")
 	}

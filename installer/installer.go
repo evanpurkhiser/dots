@@ -1,7 +1,6 @@
 package installer
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -55,10 +54,6 @@ func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 
 	if config.OverrideInstallPath != "" {
 		installPath = config.OverrideInstallPath + separator + dotfile.Path
-	}
-
-	if dotfile.SourcesAreIrregular {
-		return fmt.Errorf("Source files are not all regular files")
 	}
 
 	if !dotfile.IsChanged() && !config.ForceReinstall {

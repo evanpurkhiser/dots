@@ -1,6 +1,7 @@
 package installer
 
 import (
+	"fmt"
 	"os"
 	"sync"
 
@@ -163,6 +164,10 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 
 		prepared.SourcePermissionsDiffer = tookLowest
 		prepared.SourcesAreIrregular = !isAllRegular(sourceInfo)
+
+		if prepared.SourcesAreIrregular {
+			prepared.PrepareError = fmt.Errorf("Source files are not all regular files")
+		}
 
 		// Nothing needs to be verified if the dotfile is being added or removed.
 		if !exists || dotfile.Removed {
