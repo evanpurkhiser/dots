@@ -9,7 +9,7 @@ import (
 	"go.evanpurkhiser.com/dots/installer"
 )
 
-var e = color.RedString("errs:")
+var e = color.RedString("errn:")
 var w = color.YellowString("warn:")
 var n = color.CyanString("note:")
 
