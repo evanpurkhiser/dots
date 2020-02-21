@@ -16,6 +16,10 @@ var installCmd = cobra.Command{
 		verbose, _ := cmd.Flags().GetBool("verbose")
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
 
+		if dryRun {
+			verbose = true
+		}
+
 		dotfiles := resolver.ResolveDotfiles(*sourceConfig, *sourceLockfile).Filter(args)
 		prepared := installer.PrepareDotfiles(dotfiles, *sourceConfig)
 
