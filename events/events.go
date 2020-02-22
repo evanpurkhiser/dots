@@ -35,3 +35,41 @@ type Event struct {
 	Type   EventType
 	Object interface{}
 }
+
+// NewNoopLogger creates a NoopLogger.
+func NewNoopLogger() *NoopLogger {
+	logger := &NoopLogger{
+		eventChan: make(chan Event),
+	}
+
+	return logger
+}
+
+// NoopLogger may be used to handle event processing without doing
+// anything with the events.
+type NoopLogger struct {
+	eventChan chan Event
+}
+
+// GetEventChan returns the event channel in which no events will be logged.
+func (l *NoopLogger) GetEventChan() chan<- Event {
+	return l.eventChan
+}
+
+// LogEvents processes the Event channel, but will do nothing with the events
+func (l *NoopLogger) LogEvents() func() {
+	stop := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-l.eventChan:
+				continue
+			case <-stop:
+				return
+			}
+		}
+	}()
+
+	return func() { stop <- true }
+}

@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"go.evanpurkhiser.com/dots/events"
 	"go.evanpurkhiser.com/dots/installer"
 	"go.evanpurkhiser.com/dots/resolver"
 
@@ -49,6 +50,12 @@ var diffCmd = cobra.Command{
 			SourceConfig:        sourceConfig,
 			OverrideInstallPath: sourceTmp,
 		}
+
+		// No need to output any logging, but we must process the events.
+		noopLogger := events.NewNoopLogger()
+		installConfig.EventLogger = noopLogger.GetEventChan()
+
+		defer noopLogger.LogEvents()()
 
 		dotfiles := resolver.ResolveDotfiles(*sourceConfig, *sourceLockfile)
 		prepared := installer.PrepareDotfiles(dotfiles.Filter(files), *sourceConfig)

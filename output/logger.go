@@ -26,7 +26,8 @@ type Config struct {
 // New creates a output logger given a configuration.
 func New(config Config) *Output {
 	logger := &Output{
-		Config: config,
+		Config:    config,
+		eventChan: make(chan events.Event),
 	}
 
 	// Get the max length of the groups
@@ -36,7 +37,6 @@ func New(config Config) *Output {
 			maxDotfileLength = len(d.Path)
 		}
 	}
-	logger.eventChan = make(chan events.Event)
 	logger.maxDotfileLength = maxDotfileLength
 
 	return logger
