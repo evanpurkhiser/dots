@@ -10,6 +10,7 @@ install:
   - true
 
 script:
+  - golint ./...
   - go test ./...
 
   # Build for various architectures
