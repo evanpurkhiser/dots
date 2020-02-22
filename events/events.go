@@ -1,5 +1,6 @@
 package events
 
+// EventType represents the key of an event that may be triggered
 type EventType string
 
 // Available event types.
