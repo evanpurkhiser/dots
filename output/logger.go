@@ -93,6 +93,7 @@ func (l *Output) LogEvents() func() {
 
 // DryrunInstall outputs the logging of a dryrun of the prepared dotfiles
 func (l *Output) DryrunInstall() {
+	fmt.Printf("%s %s\n\n", n, "dry run — no dotfiles will be installed")
 	for _, dotfile := range l.PreparedInstall.Dotfiles {
 		l.DotfileInfo(dotfile)
 	}
