@@ -44,6 +44,20 @@ type InstalledDotfile struct {
 	InstallError error
 }
 
+// InstalledDotfiles represents a set of installed dotfiles.
+type InstalledDotfiles []*InstalledDotfile
+
+// HadError indicates if any dotfiles had errors while preparing or installing
+func (i *InstalledDotfiles) HadError() bool {
+	for _, dotfile := range *i {
+		if dotfile.PrepareError != nil || dotfile.InstallError != nil {
+			return true
+		}
+	}
+
+	return false
+}
+
 // WillInstallDotfile indicates weather the dotfile will be installed if
 // InstallDotfile is given the prepared dotfile. This does not guarentee that
 // errors will not occur during installation.
@@ -114,11 +128,11 @@ func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 
 // InstallDotfiles asynchronously calls InstalledDotfile on all passed
 // PreparedDotfiles.
-func InstallDotfiles(install PreparedInstall, config InstallConfig) []*InstalledDotfile {
+func InstallDotfiles(install PreparedInstall, config InstallConfig) InstalledDotfiles {
 	waitGroup := sync.WaitGroup{}
 	waitGroup.Add(len(install.Dotfiles))
 
-	installed := make([]*InstalledDotfile, len(install.Dotfiles))
+	installed := make(InstalledDotfiles, len(install.Dotfiles))
 
 	doInstall := func(i int, dotfile *PreparedDotfile) {
 		err := InstallDotfile(dotfile, config)

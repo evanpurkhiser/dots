@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"go.evanpurkhiser.com/dots/installer"
@@ -48,11 +50,20 @@ var installCmd = cobra.Command{
 		defer installLogger.LogEvents()()
 
 		installed := installer.InstallDotfiles(prepared, installConfig)
-		installer.RunInstallScripts(prepared, installConfig)
-		installer.FinalizeInstall(installed, installConfig)
+		executedScripts := installer.RunInstallScripts(prepared, installConfig)
+		finalizeErr := installer.FinalizeInstall(installed, installConfig)
 
-		// TODO Collect errors from installation, script execution, and
-		// finalization to determine exit code.
+		if installed.HadError() {
+			return fmt.Errorf("some dotfiles failed to install")
+		}
+
+		if executedScripts.HadError() {
+			return fmt.Errorf("some dotfiles scripts had errors")
+		}
+
+		if finalizeErr != nil {
+			return fmt.Errorf("finalization error: %s", finalizeErr)
+		}
 
 		return nil
 	},
