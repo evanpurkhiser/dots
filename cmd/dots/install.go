@@ -36,16 +36,23 @@ var installCmd = cobra.Command{
 			IsVerbose:       verbose,
 		})
 
+		installConfig.EventLogger = installLogger.GetEventChan()
+
+		installLogger.InstallInfo()
+
 		if dryRun {
 			installLogger.DryrunInstall()
 			return nil
 		}
 
+		defer installLogger.LogEvents()()
+
 		installed := installer.InstallDotfiles(prepared, installConfig)
 		installer.RunInstallScripts(prepared, installConfig)
 		installer.FinalizeInstall(installed, installConfig)
 
-		// TODO Needs some error handling clenaup
+		// TODO Collect errors from installation, script execution, and
+		// finalization to determine exit code.
 
 		return nil
 	},

@@ -5,7 +5,9 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
+
 	"go.evanpurkhiser.com/dots/config"
+	"go.evanpurkhiser.com/dots/events"
 	"go.evanpurkhiser.com/dots/installer"
 )
 
@@ -34,6 +36,7 @@ func New(config Config) *Output {
 			maxDotfileLength = len(d.Path)
 		}
 	}
+	logger.eventChan = make(chan events.Event)
 	logger.maxDotfileLength = maxDotfileLength
 
 	return logger
@@ -43,20 +46,46 @@ func New(config Config) *Output {
 // dotfile installation operations.
 type Output struct {
 	Config
+	eventChan        chan events.Event
 	maxDotfileLength int
 }
 
 // shouldLogDotfile indicates if the dotfile should be logged given the current
 // Output configuration.
 func (l *Output) shouldLogDotfile(dotfile *installer.PreparedDotfile) bool {
-	return dotfile.PrepareError != nil ||
-		dotfile.IsChanged() ||
-		l.InstallConfig.ForceReinstall
+	return dotfile.PrepareError != nil || installer.WillInstallDotfile(dotfile, l.InstallConfig)
+}
+
+func (l *Output) logEvent(event events.Event) {
+	// Do something here
+}
+
+// GetEventChan returns the event channel that may be sent events to be
+// outputted while the logger listening for events.
+func (l *Output) GetEventChan() chan<- events.Event {
+	return l.eventChan
+}
+
+// LogEvents procese
+func (l *Output) LogEvents() func() {
+	stop := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-stop:
+				return
+			case event := <-l.eventChan:
+				l.logEvent(event)
+			}
+		}
+	}()
+
+	return func() { stop <- true }
 }
 
 // DryrunInstall outputs the logging of a dryrun of the prepared dotfiles
 func (l *Output) DryrunInstall() {
-	l.InstallInfo()
 	for _, dotfile := range l.PreparedInstall.Dotfiles {
 		l.DotfileInfo(dotfile)
 	}

@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"go.evanpurkhiser.com/dots/config"
+	"go.evanpurkhiser.com/dots/events"
 )
 
 const separator = string(os.PathSeparator)
@@ -28,8 +29,10 @@ type InstallConfig struct {
 	// changed from its source. This implies that install scripts will be run.
 	ForceReinstall bool
 
-	// TODO We can probably add a channel here to pipe logging output so that we
-	// can output some logging
+	// EventLogger may be given data to output during the installation process.
+	// It is up to the logger service to decide if it can output anything for the
+	// given data or not.
+	EventLogger chan<- events.Event
 }
 
 // InstalledDotfile is a represents of the dotfile *after* it has been
@@ -41,12 +44,27 @@ type InstalledDotfile struct {
 	InstallError error
 }
 
+// WillInstallDotfile indicates weather the dotfile will be installed if
+// InstallDotfile is given the prepared dotfile. This does not guarentee that
+// errors will not occur during installation.
+func WillInstallDotfile(dotfile *PreparedDotfile, config InstallConfig) bool {
+	// Skip dotfiles that we failed to prepare
+	if dotfile.PrepareError != nil {
+		return false
+	}
+
+	if !dotfile.IsChanged() && !config.ForceReinstall {
+		return false
+	}
+
+	return true
+}
+
 // InstallDotfile is given a prepared dotfile and installation configuration
 // and will perform all the necessary actions to install the file into it's
 // target location.
 func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
-	// Skip dotfiles that we failed to preapre
-	if dotfile.PrepareError != nil {
+	if !WillInstallDotfile(dotfile, config) {
 		return nil
 	}
 
@@ -54,10 +72,6 @@ func InstallDotfile(dotfile *PreparedDotfile, config InstallConfig) error {
 
 	if config.OverrideInstallPath != "" {
 		installPath = config.OverrideInstallPath + separator + dotfile.Path
-	}
-
-	if !dotfile.IsChanged() && !config.ForceReinstall {
-		return nil
 	}
 
 	// Removed
@@ -114,7 +128,17 @@ func InstallDotfiles(install PreparedInstall, config InstallConfig) []*Installed
 			InstallError:    err,
 		}
 
+		config.EventLogger <- events.Event{
+			Type:   events.DotfileInstalled,
+			Object: installed[i],
+		}
+
 		waitGroup.Done()
+	}
+
+	config.EventLogger <- events.Event{
+		Type:   events.InstallStarting,
+		Object: install,
 	}
 
 	for i, dotfile := range install.Dotfiles {
@@ -123,11 +147,16 @@ func InstallDotfiles(install PreparedInstall, config InstallConfig) []*Installed
 
 	waitGroup.Wait()
 
+	config.EventLogger <- events.Event{
+		Type:   events.InstallDone,
+		Object: installed,
+	}
+
 	return installed
 }
 
 // FinalizeInstall writes the updated lockfile after installation
-func FinalizeInstall(installed []*InstalledDotfile, installConfig InstallConfig) {
+func FinalizeInstall(installed []*InstalledDotfile, installConfig InstallConfig) error {
 	installedFiles := make([]string, 0, len(installed))
 
 	for _, dotfile := range installed {
@@ -143,5 +172,6 @@ func FinalizeInstall(installed []*InstalledDotfile, installConfig InstallConfig)
 
 	lockfile := installConfig.SourceLockfile
 	lockfile.InstalledFiles = installedFiles
-	config.WriteLockfile(lockfile, installConfig.SourceConfig)
+
+	return config.WriteLockfile(lockfile, installConfig.SourceConfig)
 }
