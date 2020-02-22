@@ -57,7 +57,7 @@ func (l *Output) shouldLogDotfile(dotfile *installer.PreparedDotfile) bool {
 }
 
 func (l *Output) logEvent(event events.Event) {
-	// Do something here
+	// TODO: Do something here
 }
 
 // GetEventChan returns the event channel that may be sent events to be
@@ -66,7 +66,14 @@ func (l *Output) GetEventChan() chan<- events.Event {
 	return l.eventChan
 }
 
-// LogEvents procese
+// LogEvents processes the Events channel and output logging for each event
+// processed on the channel. A function is returned that when called will stop
+// processing.
+//
+// Typically this should be called with a defer, e.g:
+//
+//   defer myLogger.LogEvents()()
+//
 func (l *Output) LogEvents() func() {
 	stop := make(chan bool)
 
