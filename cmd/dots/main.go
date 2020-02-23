@@ -11,6 +11,8 @@ import (
 	"go.evanpurkhiser.com/dots/config"
 )
 
+var Version = "dev"
+
 var (
 	sourceConfig   *config.SourceConfig
 	sourceLockfile *config.SourceLockfile
@@ -39,15 +41,6 @@ func loadConfigs(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-var rootCmd = cobra.Command{
-	Use:   "dots",
-	Short: "A portable tool for managing a single set of dotfiles",
-
-	SilenceUsage:      true,
-	SilenceErrors:     true,
-	PersistentPreRunE: loadConfigs,
-}
-
 func sentryRecover() {
 	err := recover()
 	if err == nil {
@@ -67,6 +60,16 @@ func main() {
 	defer sentryRecover()
 
 	cobra.EnableCommandSorting = false
+
+	rootCmd := cobra.Command{
+		Use:     "dots",
+		Short:   "A portable tool for managing a single set of dotfiles",
+		Version: Version,
+
+		SilenceUsage:      true,
+		SilenceErrors:     true,
+		PersistentPreRunE: loadConfigs,
+	}
 
 	rootCmd.AddCommand(&filesCmd)
 	rootCmd.AddCommand(&diffCmd)

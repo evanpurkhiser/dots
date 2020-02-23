@@ -1,5 +1,7 @@
 .PHONY: dist/dots
 
+VERSION := $(shell git describe)
+
 dist/dots:
 	rm -f dist/dots
-	go build -o dist/dots cmd/dots/*.go
+	go build -ldflags "-X main.Version=$(VERSION)" -o dist/dots cmd/dots/*.go
