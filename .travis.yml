@@ -43,4 +43,4 @@ deploy:
     target_commitish: $TRAVIS_COMMIT
     on:
       tags: false
-      branchs: { only: [ release/2.x ] }
+      branches: { only: [ 'releases/2.x' ] }
