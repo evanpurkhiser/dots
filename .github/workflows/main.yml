@@ -1,0 +1,53 @@
+name: CI
+on: [push]
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/setup-go@v2-beta
+      with:
+        go-version: ^1.13
+
+    - name: Setup GOPATH
+      run: |
+        echo "::set-env name=GOPATH::${{ github.workspace }}/go"
+        echo "::add-path::${{ github.workspace }}/go/bin"
+
+    - uses: actions/checkout@v2
+      with:
+        path: go/src/github.com/${{ github.repository }}
+
+    - name: Checkout tags
+      run: |
+        cd $GOPATH/src/github.com/${{ github.repository }}
+        git fetch --prune --unshallow
+
+    - name: Verify
+      run: |
+        cd $GOPATH/src/github.com/${{ github.repository }}
+        go get -u golang.org/x/lint/golint
+        go get ./...
+        golint -set_exit_status ./...
+        go test ./...
+
+    - name: Build
+      run: |
+        cd $GOPATH/src/github.com/${{ github.repository }}
+        GOARCH=amd64 GOOS=windows make && mv dist/dots{,-windows-amd64.exe}
+        GOARCH=amd64 GOOS=darwin  make && mv dist/dots{,-macos-amd64}
+        GOARCH=amd64 GOOS=linux   make && mv dist/dots{,-linux-amd64}
+
+    - name: Release latest master
+      uses: marvinpinto/action-automatic-releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: dev-build
+        prerelease: true
+        title: Development Build
+        files: |
+          ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/dist/dots-linux-amd64
+          ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/dist/dots-macos-amd64
+          ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/dist/dots-windows-amd64.exe
