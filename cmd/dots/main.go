@@ -11,6 +11,7 @@ import (
 	"go.evanpurkhiser.com/dots/config"
 )
 
+// Version specifies the version outputted when using -v
 var Version = "dev"
 
 var (
