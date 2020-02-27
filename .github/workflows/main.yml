@@ -13,21 +13,22 @@ jobs:
 
     - name: Setup GOPATH
       run: |
-        echo "::set-env name=GOPATH::${{ github.workspace }}/go"
         echo "::add-path::${{ github.workspace }}/go/bin"
+        echo "::set-env name=GOPATH::${{ github.workspace }}/go"
+        echo "::set-env name=DOTS_PATH::${{ github.workspace }}/go/src/github.com/${{ github.repository }}"
 
     - uses: actions/checkout@v2
       with:
-        path: go/src/github.com/${{ github.repository }}
+        path: ${{ env.DOTS_PATH }}
 
     - name: Checkout tags
       run: |
-        cd $GOPATH/src/github.com/${{ github.repository }}
+        cd ${{ env.DOTS_PATH }}
         git fetch --prune --unshallow
 
     - name: Verify
       run: |
-        cd $GOPATH/src/github.com/${{ github.repository }}
+        cd ${{ env.DOTS_PATH }}
         go get -u golang.org/x/lint/golint
         go get ./...
         golint -set_exit_status ./...
@@ -35,7 +36,7 @@ jobs:
 
     - name: Build
       run: |
-        cd $GOPATH/src/github.com/${{ github.repository }}
+        cd ${{ env.DOTS_PATH }}
         GOARCH=amd64 GOOS=windows make && mv dist/dots{,-windows-amd64.exe}
         GOARCH=amd64 GOOS=darwin  make && mv dist/dots{,-macos-amd64}
         GOARCH=amd64 GOOS=linux   make && mv dist/dots{,-linux-amd64}
@@ -48,6 +49,7 @@ jobs:
         prerelease: true
         title: Development Build
         files: |
-          ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/dist/dots-linux-amd64
-          ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/dist/dots-macos-amd64
-          ${{ github.workspace }}/go/src/github.com/${{ github.repository }}/dist/dots-windows-amd64.exe
+          ${{ env.DOTS_PATH }}/scripts/bootstrap
+          ${{ env.DOTS_PATH }}/dist/dots-linux-amd64
+          ${{ env.DOTS_PATH }}/dist/dots-macos-amd64
+          ${{ env.DOTS_PATH }}/dist/dots-windows-amd64.exe
