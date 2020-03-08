@@ -3,6 +3,7 @@ package installer
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"go.evanpurkhiser.com/dots/config"
@@ -81,9 +82,19 @@ func (d FileMode) IsChanged() bool {
 // InstallScript represents a single installation script that is mapped to one
 // or more dotfiles.
 type InstallScript struct {
-	RequiredBy   []*PreparedDotfile
-	Path         string
-	Executable   bool
+	RequiredBy []*PreparedDotfile
+
+	// Path represents the context that the script should execute in. This is not
+	// absolute, but a relative path to the installation path.
+	Path string
+
+	// FilePath is the absolute path to the installation script
+	FilePath string
+
+	// Executable indicates weather the script is marked as executable
+	Executable bool
+
+	// PrepareError keeps track of errors while preparing the script
 	PrepareError error
 }
 
@@ -230,11 +241,12 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 	for path, dotfiles := range scriptMap {
 		script := InstallScript{
 			RequiredBy: dotfiles,
-			Path:       config.SourcePath + separator + path,
+			Path:       filepath.Dir(dotfiles[0].Path),
+			FilePath:   config.SourcePath + separator + path,
 		}
 		installScripts = append(installScripts, &script)
 
-		scriptInfo, err := os.Stat(script.Path)
+		scriptInfo, err := os.Stat(script.FilePath)
 		if err != nil {
 			script.PrepareError = err
 			continue

@@ -40,7 +40,7 @@ func RunInstallScript(script *InstallScript, config InstallConfig) error {
 		return nil
 	}
 
-	command := exec.Command(script.Path)
+	command := exec.Command(script.FilePath)
 
 	// Execute the script in the installed path context
 	if config.OverrideInstallPath != "" {
@@ -48,6 +48,8 @@ func RunInstallScript(script *InstallScript, config InstallConfig) error {
 	} else {
 		command.Dir = config.SourceConfig.InstallPath
 	}
+
+	command.Dir = command.Dir + separator + script.Path
 
 	// Setup the environment
 	command.Env = append(
