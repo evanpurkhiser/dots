@@ -1,9 +1,9 @@
-name: CI
+name: build
 on: [push]
 
 jobs:
-  ci:
-    name: CI
+  build:
+    name: build
     runs-on: ubuntu-latest
     steps:
 
@@ -15,20 +15,20 @@ jobs:
       run: |
         echo "::add-path::${{ github.workspace }}/go/bin"
         echo "::set-env name=GOPATH::${{ github.workspace }}/go"
-        echo "::set-env name=DOTS_PATH::${{ github.workspace }}/go/src/github.com/${{ github.repository }}"
+        echo "::set-env name=GO_WORKSPACE::${{ github.workspace }}/go/src/github.com/${{ github.repository }}"
 
     - uses: actions/checkout@v2
       with:
-        path: ${{ env.DOTS_PATH }}
+        path: ${{ env.GO_WORKSPACE }}
 
     - name: Checkout tags
       run: |
-        cd ${{ env.DOTS_PATH }}
+        cd ${{ env.GO_WORKSPACE }}
         git fetch --prune --unshallow
 
     - name: Verify
       run: |
-        cd ${{ env.DOTS_PATH }}
+        cd ${{ env.GO_WORKSPACE }}
         go get -u golang.org/x/lint/golint
         go get ./...
         golint -set_exit_status ./...
@@ -36,7 +36,7 @@ jobs:
 
     - name: Build
       run: |
-        cd ${{ env.DOTS_PATH }}
+        cd ${{ env.GO_WORKSPACE }}
         GOARCH=amd64 GOOS=windows make && mv dist/dots{,-windows-amd64.exe}
         GOARCH=amd64 GOOS=darwin  make && mv dist/dots{,-macos-amd64}
         GOARCH=amd64 GOOS=linux   make && mv dist/dots{,-linux-amd64}
@@ -49,7 +49,7 @@ jobs:
         prerelease: true
         title: Development Build
         files: |
-          ${{ env.DOTS_PATH }}/scripts/bootstrap
-          ${{ env.DOTS_PATH }}/dist/dots-linux-amd64
-          ${{ env.DOTS_PATH }}/dist/dots-macos-amd64
-          ${{ env.DOTS_PATH }}/dist/dots-windows-amd64.exe
+          ${{ env.GO_WORKSPACE }}/scripts/bootstrap
+          ${{ env.GO_WORKSPACE }}/dist/dots-linux-amd64
+          ${{ env.GO_WORKSPACE }}/dist/dots-macos-amd64
+          ${{ env.GO_WORKSPACE }}/dist/dots-windows-amd64.exe
