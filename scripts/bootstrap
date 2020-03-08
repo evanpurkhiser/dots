@@ -104,6 +104,8 @@ __dots_init() {
         return 1
     fi
 
+    chmod +x "$bin_dir/dots"
+
     # 4. Source in the dots completion
     # TODO
 
