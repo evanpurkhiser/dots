@@ -34,7 +34,7 @@ __dots_init() {
         return
     fi
 
-    local cloned_dir="$($DOTS_CLONE_DIR)"
+    local cloned_dir="$DOTS_CLONE_DIR"
     local bin_dir="$HOME/.local/bin"
     local install_dir="$HOME/.local/etc"
 
