@@ -1,5 +1,5 @@
 name: build
-on: [push]
+on: [ push, create ]
 
 jobs:
   build:
@@ -42,12 +42,26 @@ jobs:
         GOARCH=amd64 GOOS=linux   make && mv dist/dots{,-linux-amd64}
 
     - name: Release latest master
+      if: github.event_name == 'push'
       uses: marvinpinto/action-automatic-releases@latest
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: dev-build
         prerelease: true
         title: Development Build
+        files: |
+          ${{ env.GO_WORKSPACE }}/scripts/bootstrap
+          ${{ env.GO_WORKSPACE }}/dist/dots-linux-amd64
+          ${{ env.GO_WORKSPACE }}/dist/dots-macos-amd64
+          ${{ env.GO_WORKSPACE }}/dist/dots-windows-amd64.exe
+
+    - name: Release tagged version
+      if: github.event_name == 'create'
+      uses: marvinpinto/action-automatic-releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: ${{ github.ref }}
+        title: dots ${{ github.ref }}
         files: |
           ${{ env.GO_WORKSPACE }}/scripts/bootstrap
           ${{ env.GO_WORKSPACE }}/dist/dots-linux-amd64
