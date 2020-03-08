@@ -1,51 +1,52 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Initalization script which will do a few things:
+# Bootstrap script to initialize the dots tool on a system.
 #
-#  1. Move the cloned dotfiles directory into $HOME/.local/etc
-#  2. Link the dots executable into $HOME/.local/bin
-#  3. Add the $HOME/.local/bin directory to the $PATH if it isn't already
-#  4. Source the dots/contrib/bash_completion script
+#  1. Move the cloned dotfiles repo into $HOME/.local/etc. This directory will
+#     be created if it does not already exist.
 #
-# The `DOTS_CLONE_DIR` environment should be set to the
+#     The cloned dots repo should be specified as $DOTS_CLONE_DIR, this is
+#     required to run the bootstrap.
+#
+#  2. Ensures $HOME/.local/bin exists in the current $PATH. This will not be
+#     persisted and will only updated for the current session.
+#
+#  3. Download the appropriate `dots` binary for the installing system and
+#     locate it into the $HOME/.local/bin directory.
+#
+#     It is possible to control which version of the dots tool is installed by
+#     specifying the $DOTS_RELEASE variable. Options are as follows:
+#
+#     - `master`  Installs the latest development build
+#     - `latest`  Installs the most recent release
+#     - `vx.x.x`  Installs a specific release
+#
+#  4. Sources bash completion of dots for the current sesion.
 #
 # This script MUST be sourced!
 
-__dots_init()
-{
+__dots_init() {
     local arrow_bad="\033[0;31m==>\033[0m"
     local arrow_good="\033[0;32m==>\033[0m"
     local arrow_warn="\033[0;33m==>\033[0m"
 
-    if [[ -z "$DOTS_CLONE_DIR" ]]
-    then
+    if [[ -z "$DOTS_CLONE_DIR" ]]; then
         echo -e "$arrow_bad \$DOTS_CLONE_DIR must be set to the dots repository being setup"
         return
     fi
 
-    # The directory containing the cloned dotfiles to setup
-    local cloned_dir="$DOTS_CLONE_DIR"
-
-    # The dots utility directory
-    local dots_util_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && git rev-parse --show-toplevel)"
-
-    # The installation directory
+    local cloned_dir="$(realpath "$DOTS_CLONE_DIR")"
+    local bin_dir="$HOME/.local/bin"
     local install_dir="$HOME/.local/etc"
 
-    # The directory where the user keeps his executables
-    local bin_dir="$HOME/.local/bin"
-
     # 1. Move everything into the install directory if we need to
-    if [[ "$install_dir" != "$cloned_dir" ]]
-    then
+    if [[ "$install_dir" != "$cloned_dir" ]]; then
         # Make sure the installation directory isn't in use
-        if [ -e "$install_dir" ] && ! find "$install_dir" -maxdepth 0 -empty | read v
-        then
+        if [ -e "$install_dir" ] && ! find "$install_dir" -maxdepth 0 -empty | read v; then
             echo -e "$arrow_bad $install_dir directory not empty"
             return
         fi
 
-        # Move everything over
         echo -e "$arrow_good Moving $cloned_dir to $install_dir"
 
         # 1. Create the directory tree up to the install directory
@@ -53,38 +54,58 @@ __dots_init()
         #    cloned_dir into its place instead of inside of it
         mkdir -p "$install_dir"
         rm -rf "$install_dir"
-        mv -f  "$cloned_dir" "$install_dir"
+        mv -f "$cloned_dir" "$install_dir"
 
         # Get out of the empty directory if we were in it
         [[ "$(pwd)" == "$cloned_dir" ]] && cd
     fi
 
-    # 2. Link the dots script into the users local bin
-    if [[ ! -e "$bin_dir/dots" ]]
-    then
-        echo -e "$arrow_good Linking $install_dir/dots into $bin_dir"
-        mkdir -p "$bin_dir"
-        ln -s "$dots_util_dir/bin/dots" "$bin_dir/"
+    # 2. Add the bin directory to the front of the path
+    mkdir -p $bin_dir
 
-    # If the dots file already exists in bin check if it's not the same
-    elif [[ "$(readlink "$bin_dir/dots")" != "$dots_util_dir/bin/dots" ]]
-    then
-        echo -e "$arrow_warn $bin_dir/dots already exists!"
+    if [[ ":$PATH:" != *":$bin_dir:"* ]]; then
+        echo -e "$arrow_good Temporarily adding $bin_dir to your PATH"
+        PATH="$bin_dir:$PATH"
     fi
 
-    # 3. Add the bin directory to the front of the path
-    if [[ ":$PATH:" != *":$bin_dir:"* ]]
-    then
-        echo -e "$arrow_good Temporarily adding $bin_dir to your PATH"
-        PATH="$HOME/.local/bin:$PATH"
+    # 3. Download the appropriate dots binary
+    local arch=$(uname -sm)
+    local binary_name=""
+    case "$arch" in
+    Linux\ *64) binary_name="dots-linux-amd64" ;;
+    Darwin\ *64) binary_name="dots-macos-amd64" ;;
+    Windows*\ *64) binary_name="dots-windows-amd64.exe" ;;
+    esac
+
+    # Get the release target
+    local release_target=""
+
+    case "$DOTS_RELEASE" in
+    master) release_target="dev-build" ;;
+    latest) release_target="latest" ;;
+    v*) release_target="$DOTS_RELEASE" ;;
+    esac
+
+    [[ "$release_target" == "" ]] && release_target="latest"
+
+    # Determine latest release target if nessicary
+    if [[ "$release_target" == "latest" ]]; then
+        echo -e "$arrow_good Determining latest dots version"
+        release_target="$(basename $(curl -Ls -o /dev/null -w %{url_effective} https://github.com/evanpurkhiser/dots/releases/latest))"
+    fi
+
+    echo -e "$arrow_good Downloading binary dots@$release_target"
+
+    curl --silent --show-error --location --output "$bin_dir/dots" \
+        "https://github.com/EvanPurkhiser/dots/releases/download/${release_target}/${binary_name}"
+
+    if [[ $? != 0 ]]; then
+        echo -e "$arrow_bad Failed to download dots binary"
+        return 1
     fi
 
     # 4. Source in the dots completion
-    if ! type -t __dots_completions | grep -q '^function$' 2>/dev/null
-    then
-        echo -e "$arrow_good Sourcing bash completions for dots"
-        source "$dots_util_dir/contrib/bash_completion"
-    fi
+    # TODO
 
     echo -e "$arrow_good Dot files ready to be installed!"
 }
