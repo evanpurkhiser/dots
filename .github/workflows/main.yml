@@ -46,7 +46,7 @@ jobs:
 
     - name: Release latest master
       if: startsWith(github.ref, 'refs/heads')
-      uses: marvinpinto/action-automatic-releases@v0.3.0
+      uses: marvinpinto/action-automatic-releases@latest
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         automatic_release_tag: dev-build
@@ -60,7 +60,7 @@ jobs:
 
     - name: Release tagged version
       if: startsWith(github.ref, 'refs/tags')
-      uses: marvinpinto/action-automatic-releases@v0.3.0
+      uses: marvinpinto/action-automatic-releases@latest
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: false
