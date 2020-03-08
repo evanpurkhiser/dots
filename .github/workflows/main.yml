@@ -24,6 +24,7 @@ jobs:
     - name: Checkout tags
       run: |
         cd ${{ env.GO_WORKSPACE }}
+        git fetch --prune --unshallow
         git fetch origin +refs/tags/*:refs/tags/*
 
     - name: Verify
