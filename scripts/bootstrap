@@ -28,7 +28,6 @@
 __dots_init() {
     local arrow_bad="\033[0;31m==>\033[0m"
     local arrow_good="\033[0;32m==>\033[0m"
-    local arrow_warn="\033[0;33m==>\033[0m"
 
     if [[ -z "$DOTS_CLONE_DIR" ]]; then
         echo -e "$arrow_bad \$DOTS_CLONE_DIR must be set to the dots repository being setup"
@@ -42,7 +41,7 @@ __dots_init() {
     # 1. Move everything into the install directory if we need to
     if [[ "$install_dir" != "$cloned_dir" ]]; then
         # Make sure the installation directory isn't in use
-        if [ -e "$install_dir" ] && ! find "$install_dir" -maxdepth 0 -empty | read v; then
+        if [ -e "$install_dir" ] && ! find "$install_dir" -maxdepth 0 -empty | read -r; then
             echo -e "$arrow_bad $install_dir directory not empty"
             return
         fi
@@ -57,11 +56,11 @@ __dots_init() {
         mv -f "$cloned_dir" "$install_dir"
 
         # Get out of the empty directory if we were in it
-        [[ "$(pwd)" == "$cloned_dir" ]] && cd
+        [[ "$(pwd)" == "$cloned_dir" ]] && cd || return
     fi
 
     # 2. Add the bin directory to the front of the path
-    mkdir -p $bin_dir
+    mkdir -p "$bin_dir"
 
     if [[ ":$PATH:" != *":$bin_dir:"* ]]; then
         echo -e "$arrow_good Temporarily adding $bin_dir to your PATH"
@@ -91,15 +90,14 @@ __dots_init() {
     # Determine latest release target if nessicary
     if [[ "$release_target" == "latest" ]]; then
         echo -e "$arrow_good Determining latest dots version"
-        release_target="$(basename $(curl -Ls -o /dev/null -w %{url_effective} https://github.com/evanpurkhiser/dots/releases/latest))"
+        release_target="$(basename "$(curl -Ls -o /dev/null -w "%{url_effective}" https://github.com/evanpurkhiser/dots/releases/latest)")"
     fi
 
     echo -e "$arrow_good Downloading binary dots@$release_target"
 
-    curl --silent --show-error --location --output "$bin_dir/dots" \
-        "https://github.com/EvanPurkhiser/dots/releases/download/${release_target}/${binary_name}"
+    local url="https://github.com/EvanPurkhiser/dots/releases/download/${release_target}/${binary_name}"
 
-    if [[ $? != 0 ]]; then
+    if ! curl --silent --show-error --location --output "$bin_dir/dots" "$url"; then
         echo -e "$arrow_bad Failed to download dots binary"
         return 1
     fi
