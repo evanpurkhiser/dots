@@ -119,7 +119,7 @@ output](bin/dots#L83).
 ### The initialization bootstrap script
 
 A [initialization script](contrib/initialize) is included in the `contrib`
-directory, providing an easy way to initalize your dotfiles into the proper
+directory, providing an easy way to initialize your dotfiles into the proper
 directory, temporarily setup the `PATH` for the dots, and temporarily source the
 bash completion scripts. This way you can quickly setup your dotfiles, activate
 your configuration groups, and install the dotfiles themselves
