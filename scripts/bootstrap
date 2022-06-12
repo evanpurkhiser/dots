@@ -17,97 +17,97 @@
 #     It is possible to control which version of the dots tool is installed by
 #     specifying the $DOTS_RELEASE variable. Options are as follows:
 #
-#     - `master`  Installs the latest development build
-#     - `latest`  Installs the most recent release
-#     - `vx.x.x`  Installs a specific release
+#     - `main`   Installs the latest development build
+#     - `latest` Installs the most recent release
+#     - `vx.x.x` Installs a specific release
 #
 #  4. Sources bash completion of dots for the current sesion.
 #
 # This script MUST be sourced!
 
 __dots_init() {
-    local arrow_bad="\033[0;31m==>\033[0m"
-    local arrow_good="\033[0;32m==>\033[0m"
+	local arrow_bad="\033[0;31m==>\033[0m"
+	local arrow_good="\033[0;32m==>\033[0m"
 
-    if [[ -z "$DOTS_CLONE_DIR" ]]; then
-        echo -e "$arrow_bad \$DOTS_CLONE_DIR must be set to the dots repository being setup"
-        return
-    fi
+	if [[ -z "$DOTS_CLONE_DIR" ]]; then
+		echo -e "$arrow_bad \$DOTS_CLONE_DIR must be set to the dots repository being setup"
+		return
+	fi
 
-    local cloned_dir="$DOTS_CLONE_DIR"
-    local bin_dir="$HOME/.local/bin"
-    local install_dir="$HOME/.local/etc"
+	local cloned_dir="$DOTS_CLONE_DIR"
+	local bin_dir="$HOME/.local/bin"
+	local install_dir="$HOME/.local/etc"
 
-    # 1. Move everything into the install directory if we need to
-    if [[ "$install_dir" != "$cloned_dir" ]]; then
-        # Make sure the installation directory isn't in use
-        if [ -e "$install_dir" ] && ! find "$install_dir" -maxdepth 0 -empty | read -r; then
-            echo -e "$arrow_bad $install_dir directory not empty"
-            return
-        fi
+	# 1. Move everything into the install directory if we need to
+	if [[ "$install_dir" != "$cloned_dir" ]]; then
+		# Make sure the installation directory isn't in use
+		if [ -e "$install_dir" ] && ! find "$install_dir" -maxdepth 0 -empty | read -r; then
+			echo -e "$arrow_bad $install_dir directory not empty"
+			return
+		fi
 
-        echo -e "$arrow_good Moving $cloned_dir to $install_dir"
+		echo -e "$arrow_good Moving $cloned_dir to $install_dir"
 
-        # 1. Create the directory tree up to the install directory
-        # 2. Remove the empty install_dir base directory so we can move the
-        #    cloned_dir into its place instead of inside of it
-        mkdir -p "$install_dir"
-        rm -rf "$install_dir"
-        mv -f "$cloned_dir" "$install_dir"
+		# 1. Create the directory tree up to the install directory
+		# 2. Remove the empty install_dir base directory so we can move the
+		#    cloned_dir into its place instead of inside of it
+		mkdir -p "$install_dir"
+		rm -rf "$install_dir"
+		mv -f "$cloned_dir" "$install_dir"
 
-        # Get out of the empty directory if we were in it
-        [[ "$(pwd)" == "$cloned_dir" ]] && cd || return
-    fi
+		# Get out of the empty directory if we were in it
+		[[ "$(pwd)" == "$cloned_dir" ]] && cd || return
+	fi
 
-    # 2. Add the bin directory to the front of the path
-    mkdir -p "$bin_dir"
+	# 2. Add the bin directory to the front of the path
+	mkdir -p "$bin_dir"
 
-    if [[ ":$PATH:" != *":$bin_dir:"* ]]; then
-        echo -e "$arrow_good Temporarily adding $bin_dir to your PATH"
-        PATH="$bin_dir:$PATH"
-    fi
+	if [[ ":$PATH:" != *":$bin_dir:"* ]]; then
+		echo -e "$arrow_good Temporarily adding $bin_dir to your PATH"
+		PATH="$bin_dir:$PATH"
+	fi
 
-    # 3. Download the appropriate dots binary
-    local arch=$(uname -sm)
-    local binary_name=""
-    case "$arch" in
-    Linux\ *64) binary_name="dots-linux-amd64" ;;
-    Darwin\ *64) binary_name="dots-macos-amd64" ;;
-    Windows*\ *64) binary_name="dots-windows-amd64.exe" ;;
-    esac
+	# 3. Download the appropriate dots binary
+	local arch=$(uname -sm)
+	local binary_name=""
+	case "$arch" in
+	Linux\ *64) binary_name="dots-linux-amd64" ;;
+	Darwin\ *64) binary_name="dots-macos-amd64" ;;
+	Windows*\ *64) binary_name="dots-windows-amd64.exe" ;;
+	esac
 
-    # Get the release target
-    local release_target=""
+	# Get the release target
+	local release_target=""
 
-    case "$DOTS_RELEASE" in
-    master) release_target="dev-build" ;;
-    latest) release_target="latest" ;;
-    v*) release_target="$DOTS_RELEASE" ;;
-    esac
+	case "$DOTS_RELEASE" in
+	main) release_target="dev-build" ;;
+	latest) release_target="latest" ;;
+	v*) release_target="$DOTS_RELEASE" ;;
+	esac
 
-    [[ "$release_target" == "" ]] && release_target="latest"
+	[[ "$release_target" == "" ]] && release_target="latest"
 
-    # Determine latest release target if nessicary
-    if [[ "$release_target" == "latest" ]]; then
-        echo -e "$arrow_good Determining latest dots version"
-        release_target="$(basename "$(curl -Ls -o /dev/null -w "%{url_effective}" https://github.com/evanpurkhiser/dots/releases/latest)")"
-    fi
+	# Determine latest release target if nessicary
+	if [[ "$release_target" == "latest" ]]; then
+		echo -e "$arrow_good Determining latest dots version"
+		release_target="$(basename "$(curl -Ls -o /dev/null -w "%{url_effective}" https://github.com/evanpurkhiser/dots/releases/latest)")"
+	fi
 
-    echo -e "$arrow_good Downloading binary dots@$release_target"
+	echo -e "$arrow_good Downloading binary dots@$release_target"
 
-    local url="https://github.com/EvanPurkhiser/dots/releases/download/${release_target}/${binary_name}"
+	local url="https://github.com/EvanPurkhiser/dots/releases/download/${release_target}/${binary_name}"
 
-    if ! curl --silent --show-error --location --output "$bin_dir/dots" "$url"; then
-        echo -e "$arrow_bad Failed to download dots binary"
-        return 1
-    fi
+	if ! curl --silent --show-error --location --output "$bin_dir/dots" "$url"; then
+		echo -e "$arrow_bad Failed to download dots binary"
+		return 1
+	fi
 
-    chmod +x "$bin_dir/dots"
+	chmod +x "$bin_dir/dots"
 
-    # 4. Source in the dots completion
-    # TODO
+	# 4. Source in the dots completion
+	# TODO
 
-    echo -e "$arrow_good Dot files ready to be installed!"
+	echo -e "$arrow_good Dot files ready to be installed!"
 }
 
 __dots_init
