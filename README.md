@@ -1,3 +1,9 @@
+## ⚠️ NOTE
+
+> I have rewrote this tool in go, you can still find the old python 2.x version
+> of this tool on the `releases/1.x` branch. The readme below **is still for
+> the 1.x version of this tool!**
+
 # Dots - A dotfile Management Tool
 
 TODO: Add contents section here
