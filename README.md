@@ -93,7 +93,7 @@ These features are expanded on below.
 
 **NOTE:**
 For a quick and easy way to get going managing your dot files more effectively
-see the [dots-template](https://github.com/EvanPurkhiser/dots-template)
+see the [dots-template](https://github.com/evanpurkhiser/dots-template)
 repository that offers instructions for getting setup.
 
 ---
@@ -109,7 +109,7 @@ to keep in mind however:
 - The `dots` binary should be made available in your `PATH`.
 - The `dots` binary should support Python > 2.7 / Python > 3.2.
 - See [Evan Purkhisers personal
-  dotfiles](https://github.com/EvanPurkhiser/dots-personal) for an example
+  dotfiles](https://github.com/evanpurkhiser/dots-personal) for an example
   configuration.
 
 For details on using the `dots` tool itself see the `dots help` [USAGE

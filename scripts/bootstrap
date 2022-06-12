@@ -95,7 +95,7 @@ __dots_init() {
 
 	echo -e "$arrow_good Downloading binary dots@$release_target"
 
-	local url="https://github.com/EvanPurkhiser/dots/releases/download/${release_target}/${binary_name}"
+	local url="https://github.com/evanpurkhiser/dots/releases/download/${release_target}/${binary_name}"
 
 	if ! curl --silent --show-error --location --output "$bin_dir/dots" "$url"; then
 		echo -e "$arrow_bad Failed to download dots binary"
