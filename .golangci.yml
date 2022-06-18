@@ -1,0 +1,6 @@
+linters:
+  disable:
+    - deadcode
+    - unused
+    - varcheck
+    - errcheck

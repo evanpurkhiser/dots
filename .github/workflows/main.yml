@@ -1,70 +1,58 @@
 name: build
-on: [ push, create ]
+on: [push, create]
 
 jobs:
   build:
     name: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ^1.13
 
-    - uses: actions/setup-go@v2-beta
-      with:
-        go-version: ^1.13
+      - name: Checkout tags
+        run: |
+          git fetch --prune --unshallow
+          git fetch origin +refs/tags/*:refs/tags/*
 
-    - name: Setup GOPATH
-      run: |
-        echo "::add-path::${{ github.workspace }}/go/bin"
-        echo "::set-env name=GOPATH::${{ github.workspace }}/go"
-        echo "::set-env name=GO_WORKSPACE::${{ github.workspace }}/go/src/github.com/${{ github.repository }}"
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3
 
-    - uses: actions/checkout@v2
-      with:
-        path: ${{ env.GO_WORKSPACE }}
+      - name: Lint shell code
+        run: shellcheck -e SC2155 scripts/bootstrap
 
-    - name: Checkout tags
-      run: |
-        cd ${{ env.GO_WORKSPACE }}
-        git fetch --prune --unshallow
-        git fetch origin +refs/tags/*:refs/tags/*
+      - name: Test
+        run: go test ./...
 
-    - name: Verify
-      run: |
-        cd ${{ env.GO_WORKSPACE }}
-        go get -u golang.org/x/lint/golint
-        go get ./...
-        golint -set_exit_status ./...
-        go test ./...
-        shellcheck -e SC2155 scripts/bootstrap
+      - name: Build
+        run: |
+          GOARCH=amd64 GOOS=windows make && mv dist/dots{,-windows-amd64.exe}
+          GOARCH=amd64 GOOS=darwin  make && mv dist/dots{,-macos-amd64}
+          GOARCH=amd64 GOOS=linux   make && mv dist/dots{,-linux-amd64}
 
-    - name: Build
-      run: |
-        cd ${{ env.GO_WORKSPACE }}
-        GOARCH=amd64 GOOS=windows make && mv dist/dots{,-windows-amd64.exe}
-        GOARCH=amd64 GOOS=darwin  make && mv dist/dots{,-macos-amd64}
-        GOARCH=amd64 GOOS=linux   make && mv dist/dots{,-linux-amd64}
+      - name: Release latest master
+        if: github.event_name == 'push'
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: dev-build
+          prerelease: true
+          title: Development Build
+          files: |
+            scripts/bootstrap
+            dist/dots-linux-amd64
+            dist/dots-macos-amd64
+            dist/dots-windows-amd64.exe
 
-    - name: Release latest master
-      if: github.event_name == 'push'
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: dev-build
-        prerelease: true
-        title: Development Build
-        files: |
-          ${{ env.GO_WORKSPACE }}/scripts/bootstrap
-          ${{ env.GO_WORKSPACE }}/dist/dots-linux-amd64
-          ${{ env.GO_WORKSPACE }}/dist/dots-macos-amd64
-          ${{ env.GO_WORKSPACE }}/dist/dots-windows-amd64.exe
-
-    - name: Release tagged version
-      if: github.event_name == 'create' && startsWith(github.ref, 'refs/tags')
-      uses: marvinpinto/action-automatic-releases@latest
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        prerelease: false
-        files: |
-          ${{ env.GO_WORKSPACE }}/scripts/bootstrap
-          ${{ env.GO_WORKSPACE }}/dist/dots-linux-amd64
-          ${{ env.GO_WORKSPACE }}/dist/dots-macos-amd64
-          ${{ env.GO_WORKSPACE }}/dist/dots-windows-amd64.exe
+      - name: Release tagged version
+        if: github.event_name == 'create' && startsWith(github.ref, 'refs/tags')
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: |
+            scripts/bootstrap
+            dist/dots-linux-amd64
+            dist/dots-macos-amd64
+            dist/dots-windows-amd64.exe
