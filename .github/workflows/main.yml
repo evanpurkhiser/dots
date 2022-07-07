@@ -29,6 +29,7 @@ jobs:
         run: |
           GOARCH=amd64 GOOS=windows make && mv dist/dots{,-windows-amd64.exe}
           GOARCH=amd64 GOOS=darwin  make && mv dist/dots{,-macos-amd64}
+          GOARCH=arm64 GOOS=darwin  make && mv dist/dots{,-macos-arm64}
           GOARCH=amd64 GOOS=linux   make && mv dist/dots{,-linux-amd64}
 
       - name: Release latest master
@@ -43,6 +44,7 @@ jobs:
             scripts/bootstrap
             dist/dots-linux-amd64
             dist/dots-macos-amd64
+            dist/dots-macos-arm64
             dist/dots-windows-amd64.exe
 
       - name: Release tagged version
@@ -55,4 +57,5 @@ jobs:
             scripts/bootstrap
             dist/dots-linux-amd64
             dist/dots-macos-amd64
+            dist/dots-macos-arm64
             dist/dots-windows-amd64.exe
