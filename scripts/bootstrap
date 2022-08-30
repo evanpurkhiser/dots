@@ -94,7 +94,7 @@ __dots_init() {
 		release_target="$(basename "$(curl -Ls -o /dev/null -w "%{url_effective}" https://github.com/evanpurkhiser/dots/releases/latest)")"
 	fi
 
-	echo -e "$arrow_good Downloading binary dots@$release_target"
+	echo -e "$arrow_good Downloading binary ${binary_name}@$release_target"
 
 	local url="https://github.com/evanpurkhiser/dots/releases/download/${release_target}/${binary_name}"
 
