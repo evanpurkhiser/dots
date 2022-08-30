@@ -72,6 +72,7 @@ __dots_init() {
 	local binary_name=""
 	case "$arch" in
 	Linux\ *64) binary_name="dots-linux-amd64" ;;
+	Darwin\ x86_64) binary_name="dots-macos-amd64" ;;
 	Darwin\ amd64) binary_name="dots-macos-amd64" ;;
 	Darwin\ arm64) binary_name="dots-macos-arm64" ;;
 	Windows*\ *64) binary_name="dots-windows-amd64.exe" ;;
