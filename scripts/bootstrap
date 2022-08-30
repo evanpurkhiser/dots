@@ -77,6 +77,11 @@ __dots_init() {
 	Windows*\ *64) binary_name="dots-windows-amd64.exe" ;;
 	esac
 
+	if [[ "$binary_name" == "" ]]; then
+		echo -e "$arrow_bad No dots build available for $arch"
+		return
+	fi
+
 	# Get the release target
 	local release_target=""
 
