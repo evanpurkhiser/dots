@@ -57,7 +57,7 @@ __dots_init() {
 
 		# Get out of the empty directory if we were in it
 		if [[ "$PWD" == "$cloned_dir" ]]; then
-			cd
+			cd || return
 		fi
 	fi
 
