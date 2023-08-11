@@ -56,7 +56,9 @@ __dots_init() {
 		mv -f "$cloned_dir" "$install_dir"
 
 		# Get out of the empty directory if we were in it
-		[[ "$(pwd)" == "$cloned_dir" ]] && cd || true
+		if [[ "$PWD" == "$cloned_dir" ]]; then
+			cd
+		fi
 	fi
 
 	# 2. Add the bin directory to the front of the path
