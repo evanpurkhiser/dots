@@ -21,7 +21,7 @@
 #     - `latest` Installs the most recent release
 #     - `vx.x.x` Installs a specific release
 #
-#  4. Sources bash completion of dots for the current sesion.
+#  4. Sources bash completion of dots for the current session.
 #
 # This script MUST be sourced!
 

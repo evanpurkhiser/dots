@@ -161,10 +161,10 @@ func resolveOverrides(dotfiles dotfileMap, overrideSuffix string) {
 			// If this override file has nothing to override mark it to be
 			// flattened (the suffix will be removed). We mark it instead of
 			// flattening it into the dotfiles map here as items added to maps
-			// may be itterated over if added while iterrating a map.
+			// may be iterated over if added while iterrating a map.
 			overridesPath := strings.TrimSuffix(path, overrideSuffix)
 
-			// Only if this override overides nothing
+			// Only if this override overrides nothing
 			if _, ok := dotfiles[overridesPath]; !ok {
 				flatten[path] = overridesPath
 			}

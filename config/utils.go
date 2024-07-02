@@ -39,7 +39,7 @@ func listIntersect(list1, list2 []string) []string {
 	return list
 }
 
-// removeDupes removes duplicate entires from a list, returning the list
+// removeDupes removes duplicate entries from a list, returning the list
 // without duplicates, and a list of found duplicates.
 func removeDupes(list []string) ([]string, []string) {
 	newList := []string{}

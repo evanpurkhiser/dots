@@ -37,7 +37,7 @@ func (c *dotfileCompiler) ensureCompiled() error {
 		data = trimWhitespace(data)
 
 		// 2. For any source file that procedes after the first, trim shebang
-		//    markers for cleanlyness of bash configurations. We trim whitespace
+		//    markers for cleanliness of bash configurations. We trim whitespace
 		//    again to remove any space after the shebang.
 		if i != 0 {
 			data = trimShebang(data)
@@ -75,7 +75,7 @@ func (c *dotfileCompiler) Read(p []byte) (int, error) {
 	return c.content.Read(p)
 }
 
-// Close implments the io.Closer interface. Calling close will close all source
+// Close implements the io.Closer interface. Calling close will close all source
 // files associated to the dotfile.
 func (c *dotfileCompiler) Close() error {
 	var err error

@@ -59,7 +59,7 @@ func (i *InstalledDotfiles) HadError() bool {
 }
 
 // WillInstallDotfile indicates weather the dotfile will be installed if
-// InstallDotfile is given the prepared dotfile. This does not guarentee that
+// InstallDotfile is given the prepared dotfile. This does not guarantee that
 // errors will not occur during installation.
 func WillInstallDotfile(dotfile *PreparedDotfile, config InstallConfig) bool {
 	// Skip dotfiles that we failed to prepare

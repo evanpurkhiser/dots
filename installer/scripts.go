@@ -12,7 +12,7 @@ import (
 type ExecutedScript struct {
 	*InstallScript
 
-	// ExecutionError represents any error that occured during script execution.
+	// ExecutionError represents any error that occurred during script execution.
 	ExecutionError error
 }
 

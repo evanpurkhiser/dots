@@ -9,7 +9,7 @@ import (
 var tmpPath = os.TempDir()
 
 // TestMissingSourceDir tests that if the source directory does not exist we
-// recieve exactly one error.
+// receive exactly one error.
 func TestMissingSourceDir(t *testing.T) {
 	config := &SourceConfig{
 		SourcePath: filepath.Join(tmpPath, "path-does-not-exist"),

@@ -82,7 +82,7 @@ type SourceLockfile struct {
 	// configuration will always be installed.
 	Groups []string `json:"groups"`
 
-	// IntalledFiles is the current list of insatlled configuration files
+	// InstalledFiles is the current list of installed configuration files
 	InstalledFiles []string `json:"installed_files"`
 }
 

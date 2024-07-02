@@ -198,7 +198,7 @@ func (l *Output) DotfileInfo(dotfile *installer.PreparedDotfile) {
 	}
 
 	if dotfile.OverwritesExisting {
-		ln(w, "ovewriting existing file")
+		ln(w, "overwriting existing file")
 	}
 
 	if dotfile.SourcePermissionsDiffer {
