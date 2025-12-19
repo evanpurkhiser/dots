@@ -31,6 +31,7 @@ jobs:
           GOARCH=amd64 GOOS=darwin  make && mv dist/dots{,-macos-amd64}
           GOARCH=arm64 GOOS=darwin  make && mv dist/dots{,-macos-arm64}
           GOARCH=amd64 GOOS=linux   make && mv dist/dots{,-linux-amd64}
+          GOARCH=arm64 GOOS=linux   make && mv dist/dots{,-linux-arm64}
 
       - name: Release latest master
         if: github.event_name == 'push'
@@ -43,6 +44,7 @@ jobs:
           files: |
             scripts/bootstrap
             dist/dots-linux-amd64
+            dist/dots-linux-arm64
             dist/dots-macos-amd64
             dist/dots-macos-arm64
             dist/dots-windows-amd64.exe
@@ -56,6 +58,7 @@ jobs:
           files: |
             scripts/bootstrap
             dist/dots-linux-amd64
+            dist/dots-linux-arm64
             dist/dots-macos-amd64
             dist/dots-macos-arm64
             dist/dots-windows-amd64.exe
