@@ -73,7 +73,8 @@ __dots_init() {
 	local arch=$(uname -sm)
 	local binary_name=""
 	case "$arch" in
-	Linux\ *64) binary_name="dots-linux-amd64" ;;
+	Linux\ aarch64) binary_name="dots-linux-aarch64" ;;
+	Linux\ x86_64) binary_name="dots-linux-amd64" ;;
 	Darwin\ x86_64) binary_name="dots-macos-amd64" ;;
 	Darwin\ amd64) binary_name="dots-macos-amd64" ;;
 	Darwin\ arm64) binary_name="dots-macos-arm64" ;;
