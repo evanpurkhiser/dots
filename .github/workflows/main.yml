@@ -17,7 +17,9 @@ jobs:
           git fetch origin +refs/tags/*:refs/tags/*
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v6
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          golangci-lint run
 
       - name: Lint shell code
         run: shellcheck -e SC2155 scripts/bootstrap
