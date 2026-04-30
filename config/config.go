@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -111,7 +110,7 @@ func SourceConfigPath() string {
 func LoadSourceConfig(configPath string) (*SourceConfig, error) {
 	config := &SourceConfig{}
 
-	data, err := ioutil.ReadFile(configPath)
+	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, err
 	}

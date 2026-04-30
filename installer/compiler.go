@@ -3,7 +3,6 @@ package installer
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"go.evanpurkhiser.com/dots/config"
@@ -28,7 +27,7 @@ func (c *dotfileCompiler) ensureCompiled() error {
 	compiledData := []byte{}
 
 	for i, sourceFile := range c.files {
-		data, err := ioutil.ReadAll(sourceFile)
+		data, err := io.ReadAll(sourceFile)
 		if err != nil {
 			return err
 		}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -33,7 +32,7 @@ var diffCmd = cobra.Command{
 			}
 		}
 
-		sourceTmp, err := ioutil.TempDir("", "dots-source")
+		sourceTmp, err := os.MkdirTemp("", "dots-source")
 		if err != nil {
 			return fmt.Errorf("failed to create tmp directory: %s", err)
 		}
