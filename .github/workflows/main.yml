@@ -7,9 +7,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: jdx/mise-action@v4
         with:
-          go-version: ^1.13
+          install: true
 
       - name: Checkout tags
         run: |
