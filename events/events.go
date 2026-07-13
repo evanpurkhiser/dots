@@ -14,7 +14,7 @@ const (
 	InstallDone EventType = "install_completed"
 
 	// DotfileInstalled fires when a single dotfile has completed installation.
-	// This does not indicate that the insatllation was not a no-op.
+	// This does not indicate that the installation was not a no-op.
 	DotfileInstalled EventType = "dotfile_installed"
 
 	// ScriptExecStarted fires when script execution has begun.

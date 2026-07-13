@@ -21,7 +21,7 @@ func TestMissingSourceDir(t *testing.T) {
 		t.Fatalf("Expected len(errs) = 1; got %d", len(errs))
 	}
 
-	if errs[0].Error() != "Specified source_path does not exist" {
+	if errs[0].Error() != "specified source_path does not exist" {
 		t.Errorf("Expected source_path does not exist error message")
 	}
 }
@@ -48,7 +48,7 @@ func TestRemoveDuplicateGroups(t *testing.T) {
 		t.Fatalf("Expected len(errs) = 1; got %d", len(errs))
 	}
 
-	if errs[0].Error() != "Group \"group1\" already specified" {
+	if errs[0].Error() != "group \"group1\" already specified" {
 		t.Errorf("Expected duplicate error; got = %q", errs[0])
 	}
 
@@ -77,7 +77,7 @@ func TestRemoveMissingGroups(t *testing.T) {
 		t.Fatalf("Expected len(errs) = 2; got %d", len(errs))
 	}
 
-	if errs[0].Error() != "Group \"group1\" does not exist in sources" {
+	if errs[0].Error() != "group \"group1\" does not exist in sources" {
 		t.Errorf("Expected missing error; got = %q", errs[0])
 	}
 
@@ -114,7 +114,7 @@ func TestBaseGroupsMustBeValid(t *testing.T) {
 		t.Fatalf("Expected len(errs) = 1; got %d", len(errs))
 	}
 
-	if errs[0].Error() != "Base group \"group2\" is not a valid group" {
+	if errs[0].Error() != "base group \"group2\" is not a valid group" {
 		t.Errorf("Expected missing error; got = %q", errs[0])
 	}
 
@@ -143,7 +143,7 @@ func TestBaseGroupDuplicatesRemoved(t *testing.T) {
 		t.Fatalf("Expected len(errs) = 1; got %d", len(errs))
 	}
 
-	if errs[0].Error() != "Base group \"group1\" already specified" {
+	if errs[0].Error() != "base group \"group1\" already specified" {
 		t.Errorf("Expected missing error; got = %q", errs[0])
 	}
 
@@ -175,7 +175,7 @@ func TestInvalidProfileGroup(t *testing.T) {
 		t.Fatalf("Expected len(errs) = 1; got %d", len(errs))
 	}
 
-	if errs[0].Error() != "Profile \"test-profile2\": Group \"group2\" is not a valid group" {
+	if errs[0].Error() != "profile \"test-profile2\": group \"group2\" is not a valid group" {
 		t.Errorf("Expected missing error; got = %q", errs[0])
 	}
 
@@ -207,7 +207,7 @@ func TestProfileDuplicateGroups(t *testing.T) {
 		t.Fatalf("Expected len(errs) = 1; got %d", len(errs))
 	}
 
-	if errs[0].Error() != "Profile \"test-profile2\": Group \"group1\" already specified" {
+	if errs[0].Error() != "profile \"test-profile2\": group \"group1\" already specified" {
 		t.Errorf("Expected missing error; got = %q", errs[0])
 	}
 
@@ -239,7 +239,7 @@ func TestProfileRemoveBaseGroups(t *testing.T) {
 		t.Fatalf("Expected len(errs) = 1; got %d", len(errs))
 	}
 
-	if errs[0].Error() != "Profile \"test-profile\": Group \"group1\" is already specified in the base groups" {
+	if errs[0].Error() != "profile \"test-profile\": group \"group1\" is already specified in the base groups" {
 		t.Errorf("Expected missing error; got = %q", errs[0])
 	}
 
@@ -298,7 +298,7 @@ func TestInvalidLockfileProfile(t *testing.T) {
 
 	err := ValidateLockfile(lock, config)
 
-	if err == nil || err.Error() != "Profile \"test-profile2\" is not a configured profile" {
+	if err == nil || err.Error() != "profile \"test-profile2\" is not a configured profile" {
 		t.Errorf("Expected invalid lockfile due to invalid profile; got err = %q", err)
 	}
 }
@@ -317,7 +317,7 @@ func TestLockfileHasGroupsAndProfile(t *testing.T) {
 
 	err := ValidateLockfile(lock, config)
 
-	if err == nil || err.Error() != "Groups should not be specified if a profile is configured" {
+	if err == nil || err.Error() != "groups should not be specified if a profile is configured" {
 		t.Errorf("Expected invalid lockfile due to groups and profile; got err = %q", err)
 	}
 }
@@ -336,7 +336,7 @@ func TestLockfileInvalidGroups(t *testing.T) {
 
 	err := ValidateLockfile(lock, config)
 
-	if err == nil || err.Error() != "Lockfile contains invalid groups" {
+	if err == nil || err.Error() != "lockfile contains invalid groups" {
 		t.Errorf("Expected invalid lockfile due to invalid groups; got err = %q", err)
 	}
 }
@@ -355,7 +355,7 @@ func TestLockfileContainsBaseGroups(t *testing.T) {
 
 	err := ValidateLockfile(lock, config)
 
-	if err == nil || err.Error() != "Lockfile groups includes a base group" {
+	if err == nil || err.Error() != "lockfile groups includes a base group" {
 		t.Errorf("Expected invalid lockfile due to included base groups; got err = %q", err)
 	}
 }

@@ -58,14 +58,14 @@ machine you access and would like to have your environment configured in a snap.
 
 `dots` offers the following features:
 
-- **Configuration groups**  
+- **Configuration groups**
   When installing your dotfiles onto a new machine, `dots` offers you the
   ability to select a specific 'group' of dotfiles that you would like to have
   installed into that environment. By organizing your dotfiles into logical
   groups (such as 'machine' groups) it's possible to only install the dotfiles
   that are required by that environment.
 
-- **Cascading file structure**  
+- **Cascading file structure**
   By selecting multiple configuration groups there is the possibility that two
   groups both contain a dotfile with matching names. For example, if two
   configuration groups both contain a `bashrc` file then the `dots` utility
@@ -73,14 +73,14 @@ machine you access and would like to have your environment configured in a snap.
   offered to allow for one file to override another or for the cascading files
   to be merged into the files at specific points.
 
-- **Follows [XDG Base Directory Standard](http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)**  
+- **Follows [XDG Base Directory Standard](http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)**
   The XDG Base Directory Standard specifies that all configuration files should
   be located in the `$XDG_CONFIG_HOME` directory. By default, this is where all
   configuration files and directories will be installed. While this does
   require a little extra work to ensure all programs read their configuration
   files from here it offers a much more organized view of user dotfiles.
 
-- **Post installation scripts per file**  
+- **Post installation scripts per file**
   It's possible to include a `.install` script with any specific dotfile or
   directory. This installation script will be executed any time the specific
   dotfile is installed. This is useful for situations where you _need_ to

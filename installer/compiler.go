@@ -35,7 +35,7 @@ func (c *dotfileCompiler) ensureCompiled() error {
 		// 1. Always trim whitespace off of the source file.
 		data = trimWhitespace(data)
 
-		// 2. For any source file that procedes after the first, trim shebang
+		// 2. For any source file that proceeds after the first, trim shebang
 		//    markers for cleanliness of bash configurations. We trim whitespace
 		//    again to remove any space after the shebang.
 		if i != 0 {

@@ -72,8 +72,7 @@ func (l *Output) GetEventChan() chan<- events.Event {
 //
 // Typically this should be called with a defer, e.g:
 //
-//   defer myLogger.LogEvents()()
-//
+//	defer myLogger.LogEvents()()
 func (l *Output) LogEvents() func() {
 	stop := make(chan bool)
 

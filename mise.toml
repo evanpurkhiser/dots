@@ -1,2 +1,7 @@
 [tools]
 go = "1.26"
+"go:github.com/golangci/golangci-lint/v2/cmd/golangci-lint" = "2.12.2"
+prek = "0.4.9"
+shfmt = "3.13.1"
+shellcheck = "0.11.0"
+actionlint = "1.7.12"

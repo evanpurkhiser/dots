@@ -1,12 +1,12 @@
 name: build
-on: [push, create]
+on: [push, pull_request, create]
 
 jobs:
   build:
     name: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: jdx/mise-action@v4
         with:
           install: true
@@ -17,12 +17,7 @@ jobs:
           git fetch origin +refs/tags/*:refs/tags/*
 
       - name: Lint
-        run: |
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-          golangci-lint run
-
-      - name: Lint shell code
-        run: shellcheck -e SC2155 scripts/bootstrap
+        run: prek run --all-files
 
       - name: Test
         run: go test ./...

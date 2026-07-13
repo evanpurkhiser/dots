@@ -97,7 +97,7 @@ __dots_init() {
 
 	[[ "$release_target" == "" ]] && release_target="latest"
 
-	# Determine latest release target if nessicary
+	# Determine latest release target if necessary
 	if [[ "$release_target" == "latest" ]]; then
 		echo -e "$arrow_good Determining latest dots version"
 		release_target="$(basename "$(curl -Ls -o /dev/null -w "%{url_effective}" https://github.com/evanpurkhiser/dots/releases/latest)")"

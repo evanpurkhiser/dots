@@ -1,6 +1,6 @@
+version: "2"
+
 linters:
   disable:
-    - deadcode
     - unused
-    - varcheck
     - errcheck

@@ -177,7 +177,7 @@ func PrepareDotfiles(dotfiles resolver.Dotfiles, config config.SourceConfig) Pre
 		prepared.SourcesAreIrregular = !isAllRegular(sourceInfo)
 
 		if prepared.SourcesAreIrregular {
-			prepared.PrepareError = fmt.Errorf("Source files are not all regular files")
+			prepared.PrepareError = fmt.Errorf("source files are not all regular files")
 		}
 
 		// Nothing needs to be verified if the dotfile is being added or removed.

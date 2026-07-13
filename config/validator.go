@@ -12,11 +12,17 @@ import (
 //  1. The source path exists.
 //
 //  2. Groups do not have any duplicates.
+//
 //  3. All groups exist as directories in the configured source path.
+//
 //  4. Base groups exist in the configured groups list.
+//
 //  5. Base groups do not have duplicates.
+//
 //  6. All profiles have groups that exist in the configured groups.
+//
 //  7. All profiles do not specify duplicate groups.
+//
 //  8. All profiles do not specify groups that are already configured as base groups.
 //
 // Any groups that do not meet these conditions will be removed from the group
@@ -26,7 +32,7 @@ func SanitizeSourceConfig(config *SourceConfig) []error {
 
 	// 1. Ensure the source path exists
 	if _, err := os.Stat(config.SourcePath); os.IsNotExist(err) {
-		errs = append(errs, fmt.Errorf("Specified source_path does not exist"))
+		errs = append(errs, fmt.Errorf("specified source_path does not exist"))
 
 		// Most other validations will fail since the groups cannot be found.
 		// Bail out now and deal with missing all sources later.
@@ -41,7 +47,7 @@ func SanitizeSourceConfig(config *SourceConfig) []error {
 	config.Groups = dedupedGroups
 
 	for _, group := range dupeGroups {
-		errs = append(errs, fmt.Errorf("Group %q already specified", group))
+		errs = append(errs, fmt.Errorf("group %q already specified", group))
 	}
 
 	// Do not sanitize the groups list for missing groups until all errors are
@@ -58,7 +64,7 @@ func SanitizeSourceConfig(config *SourceConfig) []error {
 			continue
 		}
 
-		errs = append(errs, fmt.Errorf("Group %q does not exist in sources", group))
+		errs = append(errs, fmt.Errorf("group %q does not exist in sources", group))
 
 		missingGroups = append(missingGroups, group)
 	}
@@ -67,7 +73,7 @@ func SanitizeSourceConfig(config *SourceConfig) []error {
 	badBaseGroups := listDifference(config.BaseGroups, config.Groups)
 
 	for _, group := range badBaseGroups {
-		errs = append(errs, fmt.Errorf("Base group %q is not a valid group", group))
+		errs = append(errs, fmt.Errorf("base group %q is not a valid group", group))
 	}
 
 	config.BaseGroups = listDifference(config.BaseGroups, badBaseGroups)
@@ -77,7 +83,7 @@ func SanitizeSourceConfig(config *SourceConfig) []error {
 	config.BaseGroups = dedupedBaseGroups
 
 	for _, group := range dupeBaseGroups {
-		errs = append(errs, fmt.Errorf("Base group %q already specified", group))
+		errs = append(errs, fmt.Errorf("base group %q already specified", group))
 	}
 
 	for profile, groups := range config.Profiles {
@@ -85,7 +91,7 @@ func SanitizeSourceConfig(config *SourceConfig) []error {
 		badGroups := listDifference(groups, config.Groups)
 
 		for _, group := range badGroups {
-			err := fmt.Errorf("Profile %q: Group %q is not a valid group", profile, group)
+			err := fmt.Errorf("profile %q: group %q is not a valid group", profile, group)
 			errs = append(errs, err)
 		}
 
@@ -99,7 +105,7 @@ func SanitizeSourceConfig(config *SourceConfig) []error {
 		groups = config.Profiles[profile]
 
 		for _, group := range dupeGroups {
-			err := fmt.Errorf("Profile %q: Group %q already specified", profile, group)
+			err := fmt.Errorf("profile %q: group %q already specified", profile, group)
 			errs = append(errs, err)
 		}
 
@@ -107,7 +113,7 @@ func SanitizeSourceConfig(config *SourceConfig) []error {
 		includedBaseGroups := listIntersect(groups, config.BaseGroups)
 
 		for _, group := range includedBaseGroups {
-			err := fmt.Errorf("Profile %q: Group %q is already specified in the base groups", profile, group)
+			err := fmt.Errorf("profile %q: group %q is already specified in the base groups", profile, group)
 			errs = append(errs, err)
 		}
 
@@ -146,12 +152,12 @@ func SanitizeSourceConfig(config *SourceConfig) []error {
 func ValidateLockfile(lockfile *SourceLockfile, config *SourceConfig) error {
 	// 1. Check that specified profile is valid
 	if _, ok := config.Profiles[lockfile.Profile]; lockfile.Profile != "" && !ok {
-		return fmt.Errorf("Profile %q is not a configured profile", lockfile.Profile)
+		return fmt.Errorf("profile %q is not a configured profile", lockfile.Profile)
 	}
 
 	// 2. Check that no groups are specified with a profile
 	if lockfile.Profile != "" && len(lockfile.Groups) > 0 {
-		return fmt.Errorf("Groups should not be specified if a profile is configured")
+		return fmt.Errorf("groups should not be specified if a profile is configured")
 	}
 
 	hasGroups := len(lockfile.Groups) > 0 && lockfile.Profile == ""
@@ -160,14 +166,14 @@ func ValidateLockfile(lockfile *SourceLockfile, config *SourceConfig) error {
 	invalidGroups := listDifference(lockfile.Groups, config.Groups)
 
 	if hasGroups && len(invalidGroups) > 0 {
-		return fmt.Errorf("Lockfile contains invalid groups")
+		return fmt.Errorf("lockfile contains invalid groups")
 	}
 
 	// 4. Check for base groups included in the groups
 	baseGroups := listIntersect(lockfile.Groups, config.BaseGroups)
 
 	if hasGroups && len(baseGroups) > 0 {
-		return fmt.Errorf("Lockfile groups includes a base group")
+		return fmt.Errorf("lockfile groups includes a base group")
 	}
 
 	return nil
