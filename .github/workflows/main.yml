@@ -5,10 +5,15 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v6
-      - uses: jdx/mise-action@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
+          persist-credentials: false
+      - uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        with:
+          cache: false
           install: true
 
       - name: Checkout tags
@@ -32,12 +37,13 @@ jobs:
 
       - name: Release latest master
         if: github.event_name == 'push'
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@fe965f7af51af5f2602596916f38a38df2e33de0 # v3.0.2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: dev-build
+          tag_name: dev-build
+          target_commitish: ${{ github.sha }}
           prerelease: true
-          title: Development Build
+          name: Development Build
+          make_latest: false
           files: |
             scripts/bootstrap
             dist/dots-linux-amd64
@@ -48,9 +54,8 @@ jobs:
 
       - name: Release tagged version
         if: github.event_name == 'create' && startsWith(github.ref, 'refs/tags')
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@fe965f7af51af5f2602596916f38a38df2e33de0 # v3.0.2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           files: |
             scripts/bootstrap
