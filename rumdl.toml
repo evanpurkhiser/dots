@@ -1,0 +1,7 @@
+flavor = "gfm"
+
+[MD013]
+code_blocks = false
+reflow = true
+reflow_mode = "semantic-line-breaks"
+tables = false
